@@ -1,0 +1,84 @@
+<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>
+<title>Informe Resumen de Ejecución — Mes 06.26</title>
+<style>
+body{font-family:Calibri,Arial,sans-serif;margin:40px;color:#222}
+h1{font-size:20pt;color:#1f4e79;border-bottom:2px solid #1f4e79;padding-bottom:6px}
+h2{font-size:14pt;color:#1f4e79;margin-top:28px}
+p{font-size:11pt;text-align:justify;line-height:1.5}
+table{border-collapse:collapse;width:100%;font-size:10pt;margin:12px 0}
+th,td{border:1px solid #999;padding:5px 8px;text-align:left;vertical-align:top}
+th{background:#1f4e79;color:#fff}
+td.num{text-align:right;white-space:nowrap}
+tr.clase td{font-weight:bold;background:#eef3f9}
+tr.sub td{color:#5a6b7a;font-size:9pt}
+td.code{padding-left:24px}
+tr.total td{background:#dbe7f4;font-weight:bold}
+tr.subtotal-estudios td{background:#dff0d8;font-weight:bold}
+tr.subtotal-adicionales td{background:#f2dede;font-weight:bold}
+.meta{font-size:10pt;color:#555;margin-bottom:20px}
+ul{font-size:11pt;line-height:1.5}
+@media print{body{margin:15mm}}
+</style></head><body>
+<h1>Informe Resumen de Ejecución — Mes Junio 2026 (m.06.26)</h1>
+<div class='meta'>Fecha de elaboración: 
+2026-08-17
+</div>
+<h2>Resumen Ejecutivo</h2>
+<p>El presente informe resume la ejecución del mes <strong>junio 2026 (m.06.26)</strong> basado en el informe generado por el sistema Phillips - SAP del INC, enviado por Angela Lopez (alopez@cancer.gov.co) - Secretaria - Auxiliar Administrativo Imágenes Diagnósticas. Se procesaron 9.820 filas del mes; tras conservar únicamente las filas con <em>ESTADO</em> = <strong>APROBADO</strong> (678 filas descartadas por no estar aprobadas) y excluir las de <em>DOCTEXT</em> = “Philips, Admin” (3), quedan <strong>9.139 filas</strong>. A las 77 celdas sin código se les asignó un código (mapeo del script 5 y respaldo por similitud entre <em>PRESTACION</em> y <em>DESCRIPCION</em> de CUPS.2025). Del cruce por código, <strong>9.127 filas</strong> (de 9.139) quedaron con <strong>CLASE y TARIFA</strong> en el catálogo; 12 filas quedaron <strong>excluidas por decisión</strong> (389104, 542803, 976200) y se descartan del informe. El cruce quedó completo (0 filas vacías inesperadas, Z = 100%). A continuación se presentan la <em>TABLA ESTUDIOS</em> y la <em>TABLA PROCEDIMIENTOS</em> con sus recuentos (CANTIDAD) y valores totales (VALOR TOTAL).
+<h2>CONTEO DE FILAS DEL MES</h2><table><thead><tr><th>TIPO</th><th>CANTIDAD</th></tr></thead><tbody><tr><td>TOTAL FILAS PROCESADAS</td><td class='num'>9.139</td></tr><tr><td>PROCEDIMIENTOS</td><td class='num'>574</td></tr><tr><td>ESTUDIOS</td><td class='num'>8.553</td></tr><tr><td>EXCLUIDAS POR DECISIÓN</td><td class='num'>12</td></tr></tbody></table><p>El conteo de ESTUDIOS <strong>excluye</strong> la <em>HORA JUNTA MEDICA</em> y el <em>VALOR FIJO POR SERVICIO DE LA NOCHE</em> (adicionales, no son filas del mes). Las <strong>EXCLUIDAS POR DECISIÓN</strong> se descartan del informe y no se cuentan en PROCEDIMIENTOS ni en ESTUDIOS.</p>
+<h2>TABLA ESTUDIOS</h2>
+<table><thead><tr><th>CLASE</th><th>TARIFA</th><th>CANTIDAD</th><th>VALOR TOTAL</th></tr></thead><tbody>
+<tr><td>BIOPSIA PROFUNDA</td><td class='num'>106.996</td><td class='num'>124</td><td class='num'>13.267.504</td></tr>
+<tr><td>BIOPSIA SUPERFICIAL</td><td class='num'>53.497</td><td class='num'>88</td><td class='num'>4.707.736</td></tr>
+<tr><td>CATETER CENTRAL</td><td class='num'>320.719</td><td class='num'>0</td><td class='num'>0</td></tr>
+<tr><td>ECOGRAFIA</td><td class='num'>35.575</td><td class='num'>1985</td><td class='num'>70.616.375</td></tr>
+<tr><td>ECOGRAFIA DOPPLER</td><td class='num'>73.559</td><td class='num'>260</td><td class='num'>19.125.340</td></tr>
+<tr><td>ESTUDIOS DIGESTIVOS Y ESPECIALES</td><td class='num'>44.136</td><td class='num'>243</td><td class='num'>10.725.048</td></tr>
+<tr><td>LOCALIZACION</td><td class='num'>106.996</td><td class='num'>14</td><td class='num'>1.497.944</td></tr>
+<tr><td>MAMOGRAFIA</td><td class='num'>35.575</td><td class='num'>0</td><td class='num'>0</td></tr>
+<tr><td>PARACENTESIS</td><td class='num'>64.197</td><td class='num'>73</td><td class='num'>4.686.381</td></tr>
+<tr><td>RADIOGRAFIA</td><td class='num'>7.089</td><td class='num'>1483</td><td class='num'>10.512.987</td></tr>
+<tr><td>RESONANCIA MAGNETICA</td><td class='num'>53.497</td><td class='num'>1376</td><td class='num'>73.611.872</td></tr>
+<tr><td>RESONANCIA MAGNETICA FUNCIONAL</td><td class='num'>160.493</td><td class='num'>6</td><td class='num'>962.958</td></tr>
+<tr><td>RESONANCIA MAGNETICA TOTAL</td><td class='num'>213.991</td><td class='num'>0</td><td class='num'>0</td></tr>
+<tr><td>TOMOGRAFIA - TAC</td><td class='num'>35.575</td><td class='num'>2759</td><td class='num'>98.151.425</td></tr>
+<tr><td>TORACENTESIS</td><td class='num'>64.197</td><td class='num'>142</td><td class='num'>9.115.974</td></tr>
+<tr class='subtotal-estudios'><td>SUBTOTAL ESTUDIOS</td><td class='num'></td><td class='num'>8553</td><td class='num'>316.981.544</td></tr>
+<tr><td>HORA JUNTA MEDICA</td><td class='num'>133.897</td><td class='num'>105</td><td class='num'>14.059.185</td></tr>
+<tr><td>VALOR FIJO POR SERVICIO DE LA NOCHE</td><td class='num'>62.618.981</td><td class='num'>1</td><td class='num'>62.618.981</td></tr>
+<tr class='subtotal-adicionales'><td>SUBTOTAL ADICIONALES</td><td class='num'></td><td class='num'></td><td class='num'>76.678.166</td></tr>
+<tr class='total'><td>TOTAL</td><td class='num'></td><td class='num'></td><td class='num'>393.659.710</td></tr>
+</tbody></table>
+<h2>TABLA PROCEDIMIENTOS</h2>
+<table><thead><tr><th>CODIGO</th><th>DESCRIPCION</th><th>TARIFA</th><th>CANTIDAD</th><th>VALOR TOTAL</th><th>ADICIONAL</th></tr></thead><tbody>
+<tr><td>385120</td><td>OCLUSION DE LESION EN VASOS INTRACRANEALES, VIA ENDOVASCULAR</td><td class='num'>2.884.863</td><td class='num'>4</td><td class='num'>11.539.452</td><td>FACTURADO</td></tr>
+<tr><td>385207</td><td>EMBOLIZACION DE TUMORES VIA ENDOVASCULAR</td><td class='num'>2.202.768</td><td class='num'>1</td><td class='num'>2.202.768</td><td>FACTURADO</td></tr>
+<tr><td>385620</td><td>OCLUSION DE ARTERIAS ABDOMINALES, VIA ENDOVASCULAR</td><td class='num'>477.467</td><td class='num'>38</td><td class='num'>18.143.746</td><td>FACTURADO</td></tr>
+<tr><td>386402</td><td>EXTRACCION DE CUERPO EXTRAÑO INTRAVASCULAR (ARTERIAL) (VENOSO), VIA ENDOVASCULAR [PERCUTANEA]</td><td class='num'>412.138</td><td class='num'>2</td><td class='num'>824.276</td><td>FACTURADO</td></tr>
+<tr><td>389105</td><td>INSERCION DE CATETER CENTRAL MINIMAMENTE INVASIVA</td><td class='num'>320.719</td><td class='num'>60</td><td class='num'>19.243.140</td><td>FACTURADO</td></tr>
+<tr><td>395030</td><td>ANGIOPLASTIA CON BALON DE VASOS DE MIEMBROS SUPERIORES</td><td class='num'>960.160</td><td class='num'>1</td><td class='num'>960.160</td><td>FACTURADO</td></tr>
+<tr><td>395031</td><td>ANGIOPLASTIA CON BALON DE VASOS DE MIEMBROS SUPERIORES, CON PROTESIS (STENT) O INJERTO (S) PROTESICO (S)</td><td class='num'>1.224.474</td><td class='num'>1</td><td class='num'>1.224.474</td><td>FACTURADO</td></tr>
+<tr><td>395081</td><td>ANGIOPLASTIA O ATERECTOMIA DE VASOS DE MIEMBROS INFERIORES, CON BALON, PROTESIS (STENT) O INJERTO (S) PROTESICO (S)</td><td class='num'>1.224.474</td><td class='num'>2</td><td class='num'>2.448.948</td><td>FACTURADO</td></tr>
+<tr><td>510301</td><td>DRENAJE BILIAR VIA PERCUTANEA Y COLOCACION DE DISPOSITIVO</td><td class='num'>477.467</td><td class='num'>26</td><td class='num'>12.414.142</td><td>FACTURADO</td></tr>
+<tr><td>550202</td><td>NEFROSTOMIA VIA PERCUTANEA</td><td class='num'>483.080</td><td class='num'>2</td><td class='num'>966.160</td><td>FACTURADO</td></tr>
+<tr><td>551202</td><td>PIELOSTOMIA O INSERCION DE TUBO PARA DRENAJE DE PELVIS RENAL VIA PERCUTANEA</td><td class='num'>334.065</td><td class='num'>78</td><td class='num'>26.057.070</td><td>FACTURADO</td></tr>
+<tr><td>559301</td><td>REEMPLAZO DE CATETER DE NEFROSTOMIA</td><td class='num'>483.080</td><td class='num'>94</td><td class='num'>45.409.520</td><td>FACTURADO</td></tr>
+<tr><td>861102</td><td>DRENAJE DE COLECCION PROFUNDA EN PIEL O TEJIDO CELULAR SUBCUTANEO POR INCISION O ASPIRACION</td><td class='num'>106.996</td><td class='num'>17</td><td class='num'>1.818.932</td><td>FACTURADO</td></tr>
+<tr><td>874133</td><td>ARTERIOGRAFIA VERTEBRAL BILATERAL SELECTIVA CON CAROTIDAS (PANANGIOGRAFIA)</td><td class='num'>1.055.242</td><td class='num'>3</td><td class='num'>3.165.726</td><td>FACTURADO</td></tr>
+<tr><td>874301</td><td>VENOGRAFIA SELECTIVA DIAGNOSTICA DE CABEZA Y CUELLO (UNO O MAS VASOS)</td><td class='num'>645.985</td><td class='num'>2</td><td class='num'>1.291.970</td><td>FACTURADO</td></tr>
+<tr><td>876241</td><td>ANGIOGRAFIA DE VENAS CAVAS O CAVOGRAFIA</td><td class='num'>128.394</td><td class='num'>3</td><td class='num'>385.182</td><td>FACTURADO</td></tr>
+<tr><td>877110</td><td>AORTOGRAMA ABDOMINAL</td><td class='num'>308.949</td><td class='num'>5</td><td class='num'>1.544.745</td><td>FACTURADO</td></tr>
+<tr><td>877112</td><td>ARTERIOGRAFIA DE VASOS ABDOMINALES (SELECTIVA)</td><td class='num'>726.230</td><td class='num'>3</td><td class='num'>2.178.690</td><td>FACTURADO</td></tr>
+<tr><td>877171</td><td>ARTERIOGRAFIA PELVICA (SELECTIVA)</td><td class='num'>437.344</td><td class='num'>2</td><td class='num'>874.688</td><td>FACTURADO</td></tr>
+<tr><td>877602</td><td>COLANGIOGRAFIA POR TUBO O CATETER EN LA VIA BILIAR</td><td class='num'>216.666</td><td class='num'>28</td><td class='num'>6.066.648</td><td>FACTURADO</td></tr>
+<tr><td>877603</td><td>COLANGIOGRAFIA PERCUTANEA</td><td class='num'>216.666</td><td class='num'>2</td><td class='num'>433.332</td><td>FACTURADO</td></tr>
+<tr><td>877812</td><td>PIELOGRAFIA A TRAVES DE TUBO DE NEFROSTOMIA</td><td class='num'>161.810</td><td class='num'>153</td><td class='num'>24.756.930</td><td>FACTURADO</td></tr>
+<tr><td>877816</td><td>PIELOGRAFIA PERCUTANEA</td><td class='num'>199.763</td><td class='num'>35</td><td class='num'>6.991.705</td><td>FACTURADO</td></tr>
+<tr><td>970501</td><td>SUSTITUCION DE TUBO (SONDA) O DISPOSITIVO EN VIAS BILIARES O CONDUCTO PANCREATICO</td><td class='num'>477.467</td><td class='num'>12</td><td class='num'>5.729.604</td><td>FACTURADO</td></tr>
+<tr class='total'><td>TOTAL</td><td></td><td class='num'></td><td class='num'>574</td><td class='num'>196.672.008</td><td></td></tr>
+</tbody></table>
+<h2>Valor Ejecutado - Valor por facturar</h2>
+<table><tr class='total'><td>VALOR EJECUTADO MES JUNIO 2026</td><td class='num'>590.331.718</td></tr></table>
+<h2>Salvedades</h2>
+<p><strong>Salvedades:</strong></p><ul><li>Se descartaron las filas con <em>ESTADO</em> distinto de <strong>APROBADO</strong> (678).</li><li>Se descartaron las filas con <em>DOCTEXT</em> = <strong>“Philips, Admin”</strong> (3).</li><li>Se verificó que las <strong>9.139</strong> filas resultantes tienen <strong>ESTADO = APROBADO</strong> (verificadas: 9.139) y que <strong>todas quedaron con CLASE y TARIFA</strong> en el catálogo o son <strong>excluidas por decisión</strong> (12 filas: 389104, 542803, 976200), que se descartan del informe.</li></ul>
+</body></html>

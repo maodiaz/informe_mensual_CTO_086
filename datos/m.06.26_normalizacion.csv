@@ -1,0 +1,14 @@
+concepto,cantidad,nota
+Mes procesado,06.26,Mes y año del archivo procesado
+Filas crudas del mes,9820,Filas que traía el Excel original
+Filas descartadas (STTEXT ≠ Aprobado),678,Se eliminan: su estado no es APROBADO (equivale a DOCTEXT vacío)
+"Filas descartadas (DOCTEXT = Philips, Admin)",3,Se eliminan: filas administrativas
+Filas tras descartes,9139,Crudas menos los descartes anteriores
+Códigos con 'L' final normalizados,43,Ej.: 879301L -> 879301
+Códigos vacíos al inicio,128,Celdas de código sin valor antes de asignar
+Códigos asignados por mapeo (script 5),77,Código asignado con la tabla de mapeo conocida
+Códigos asignados por similitud (CUPS.2025),0,Código asignado por parecido con CUPS.2025
+Códigos vacíos tras la asignación,0,Celdas aún vacías tras mapeo + similitud
+Prestación sin código descartada,0,AG BIOPSIA ... DE GLÁNDULA (no tiene código único)
+Filas resultantes (mes normalizado),9139,Filas que quedan listas para el informe
+Códigos vacíos/NA al final,0,OK - ninguna fila sin código
