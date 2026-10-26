@@ -222,8 +222,9 @@ Rscript 6_generar_borrador.R 06.26 --sin-pdf # solo HTML
 
 ```r
 generar_informe_mes(mes, version = "3.0",
-                    ruta_tarifario  = "datos/Tarifario_CTO_086_2026_BORRADOR.xlsx",
-                    cant_junta_param = 105)
+                    ruta_tarifario   = "datos/Tarifario_CTO_086_2026_BORRADOR.xlsx",
+                    cant_junta_param = 105,
+                    tarifa_fijo_param = 56560000)
 ```
 
 | Parámetro | Default | Para qué |
@@ -231,6 +232,7 @@ generar_informe_mes(mes, version = "3.0",
 | `version` | `c("1.0", "2.0")` | `"3.0"` = detallada + `ADICIONAL` y `CTO_086` |
 | `ruta_tarifario` | `NULL` (oficial de `datos/`) | Usar un tarifario alternativo |
 | `cant_junta_param` | `NULL` (100 por Rscript / pregunta en RStudio) | Fijar HORA JUNTA MEDICA sin preguntar |
+| `tarifa_fijo_param` | `NULL` (la de `tarifas_especiales_2026.xlsx` = 62.618.981) | Fijar la tarifa de VALOR FIJO POR SERVICIO DE LA NOCHE |
 
 > Los valores por defecto **reproducen el comportamiento oficial**: `main.R` y los
 > Pasos 3-4-5 no cambian. La versión 3.0 también se puede exportar a PDF con

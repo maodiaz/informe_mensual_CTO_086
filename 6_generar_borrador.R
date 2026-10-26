@@ -39,6 +39,10 @@ if (length(meses) == 0) meses <- c("06.26", "07.26")
 junta_por_mes <- c("06.26" = 105L, "07.26" = 116L,
                    "08.26" = 100L, "09.26" = 100L)
 
+# VALOR FIJO POR SERVICIO DE LA NOCHE: tarifa PROVISIONAL del borrador.
+# La del archivo oficial (datos/tarifas_especiales_2026.xlsx) es 62.618.981.
+tarifa_fijo_borrador <- 56560000
+
 # --- 2. Tarifario del borrador --------------------------------------------------
 ruta_borrador <- file.path(getwd(), "datos", "Tarifario_CTO_086_2026_BORRADOR.xlsx")
 if (!file.exists(ruta_borrador)) {
@@ -68,7 +72,8 @@ for (m in meses) {
   }
   # HTML V.3.0 con el tarifario del borrador
   generar_informe_mes(m, version = "3.0", ruta_tarifario = ruta_borrador,
-                      cant_junta_param = cj)
+                      cant_junta_param = cj,
+                      tarifa_fijo_param = tarifa_fijo_borrador)
 
   if (generar_pdf) {
     exportar_pdf(m, version = "3.0")

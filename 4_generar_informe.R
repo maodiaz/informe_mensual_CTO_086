@@ -56,13 +56,17 @@ source("2_limpiar_mes.R")   # define limpiar_mes() (la normalización la hace el
 #                  precios no definitivos).
 # cant_junta_param : NULL = 100 por Rscript / pregunta en RStudio (por defecto);
 #                  número = cantidad fija de HORA JUNTA MEDICA (no pregunta).
+# tarifa_fijo_param : NULL = la de tarifas_especiales_2026.xlsx (por defecto);
+#                  número = tarifa fija de VALOR FIJO POR SERVICIO DE LA NOCHE
+#                  (no se lee del xlsx).
 # Se invoca por Rscript (4_generar_informe.R MM.YY) o, al ser source() desde
 # main.R (PASO 4), llamando directamente a generar_informe_mes("MM.YY").
 # Las decisiones se CONSULTAN al usuario en RStudio (interactivo); por Rscript
 # se usan los valores por defecto.
 # ================================================================================
 generar_informe_mes <- function(mes_arg, version = c("1.0", "2.0"),
-                                ruta_tarifario = NULL, cant_junta_param = NULL) {
+                                ruta_tarifario = NULL, cant_junta_param = NULL,
+                                tarifa_fijo_param = NULL) {
 
   meses_es <- c("enero","febrero","marzo","abril","mayo","junio","julio",
                 "agosto","septiembre","octubre","noviembre","diciembre")
@@ -184,6 +188,9 @@ obtener_tarifa <- function(patron, default) {
 }
 tarifa_junta <- obtener_tarifa("JUNTA", 133897)
 tarifa_fijo  <- obtener_tarifa("VALOR FIJO", 62618981)
+# Permite fijar la tarifa nocturna desde el llamador (p. ej. el borrador, con un
+# valor provisional) sin tocar tarifas_especiales_2026.xlsx.
+if (!is.null(tarifa_fijo_param)) tarifa_fijo <- as.numeric(tarifa_fijo_param)
 cant_junta   <- 100L   # CANTIDAD provisional (se consulta al usuario en RStudio)
 cant_fijo    <- 1L
 if (!is.null(cant_junta_param)) {
