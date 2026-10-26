@@ -3,6 +3,8 @@
 **Proyecto:** `informe_mensual_ct086`
 **Fecha:** 2026-08-14
 **Estado:** ✅ Creado (scripts listos para ejecutar por mes)
+**Actualización 2026-10-25:** ✅ Añadida la **versión V.3.0 (informe BORRADOR)** con
+tarifario alternativo y columnas `ADICIONAL` / `CTO_086` (ver sección 9).
 
 ---
 
@@ -21,6 +23,8 @@ Requisitos del usuario (confirmados):
    puede cambiar) — copia **self-contained** en `datos/`.
 4. ✅ Generar el informe en sus **2 versiones** en **HTML y PDF**.
 5. ✅ El informe se mantiene **como está hoy** (NO incorpora la columna `CTO_086`).
+   - *Excepción (2026-10-25):* la **versión V.3.0** (informe borrador) **sí**
+     incorpora `ADICIONAL` y `CTO_086`. Las versiones oficiales V.1.0/V.2.0 no cambian.
 
 ---
 
@@ -61,6 +65,7 @@ informe_mensual_ct086/
 ├── 3_cargar_catalogo.R           # Verifica/actualiza insumos xlsx (tarifario + CUPS)
 ├── 4_generar_informe.R           # Traslado de script_informe_mes.R (HTML V.1.0 y V.2.0)
 ├── 5_exportar_pdf.R              # Exportación a PDF con Chrome headless
+├── 6_generar_borrador.R          # Informe BORRADOR V.3.0 (tarifario alternativo)
 ├── PLAN_DE_TRABAJO.md            # Este documento
 ├── registro_carga.csv            # Log de meses cargados (lo genera 1_cargar_mes.R)
 └── datos/                        # Insumos self-contained (los copia 3_cargar_catalogo.R)
@@ -70,7 +75,8 @@ informe_mensual_ct086/
     ├── m.MM.YY_normalizacion.html # Informe explicativo (para ver en el navegador)
     ├── m.MM.YY_normalizacion.csv  # Resumen de la normalización (Paso 2)
     ├── m.MM.YY_normalizacion_detalle.csv  # Detalle de códigos asignados (Paso 2, si hubo)
-    ├── Tarifario_CTO_086_2026.xlsx  # TARIFARIO con precios (lo aporta el usuario; Paso 3 actualiza)
+    ├── Tarifario_CTO_086_2026.xlsx  # TARIFARIO OFICIAL con precios (lo aporta el usuario; Paso 3 actualiza)
+    ├── Tarifario_CTO_086_2026_BORRADOR.xlsx # (Opcional) copia con precios NO definitivos; solo para la V.3.0
     ├── CUPS.2025.xlsx             # Respaldo por similitud (lo aporta el usuario)
     └── tarifas_especiales_2026.xlsx # Solo junta médica y servicio nocturno (opcional; valores por defecto si falta)
 ```
@@ -94,7 +100,8 @@ informe_mensual_ct086/
 
 - El pipeline histórico de generación del catálogo (scripts `2_`…`27_` de
   `recuento_estudios_anual`). Este proyecto **consume** el tarifario (xlsx), no lo genera.
-- La columna `CTO_086` del catálogo del tarifario (el informe se mantiene como está).
+- La columna `CTO_086` del catálogo del tarifario en las versiones **oficiales**
+  (V.1.0/V.2.0 se mantienen como están). Sí se usa en la **V.3.0 (borrador)**.
 
 ---
 
@@ -117,6 +124,11 @@ Rscript 5_exportar_pdf.R 07.26
 # OPCIONAL (solo cuando cambian los precios):
 # 3) Actualizar el catálogo del tarifario
 Rscript 3_cargar_catalogo.R --actualizar
+
+# BORRADOR (precios NO definitivos; V.3.0 con ADICIONAL y CTO_086):
+Rscript 6_generar_borrador.R                # 06.26 y 07.26 por defecto
+Rscript 6_generar_borrador.R 06.26 07.26    # meses indicados
+Rscript 6_generar_borrador.R 06.26 --sin-pdf # solo el HTML
 ```
 
 > Nota: la **normalización (paso 2) es obligatoria** — el Paso 4 exige
@@ -155,6 +167,9 @@ pendientes) y su catálogo **puede cambiar**. Por eso:
 - [ ] `5_exportar_pdf.R` genera el PDF de cada versión.
 - [ ] Re-ejecutar `3 --actualizar` + `4` + `5` tras un cambio del tarifario regenera
       el informe con el catálogo vigente.
+- [ ] `6_generar_borrador.R` genera `informe_MM.YY_V.3.0.html/.pdf` con las columnas
+      `ADICIONAL` y `CTO_086`, **sin** modificar el tarifario oficial ni los
+      informes V.1.0/V.2.0.
 
 ---
 
@@ -164,3 +179,78 @@ pendientes) y su catálogo **puede cambiar**. Por eso:
 - [ ] Confirmar el estado final del tarifario (cuando `tarifario_CTO_086_V_2` termine)
       y re-copiar el catálogo.
 - [ ] Validar que las tarifas de HORA JUNTA MEDICA / VALOR FIJO siguen vigentes.
+
+---
+
+## 9. Versión 3.0 — informe BORRADOR (precios NO definitivos)
+
+**Añadido el 2026-10-25.** Permite generar una **nueva versión del informe** (V.3.0)
+para revisar **precios alternativos** que todavía **no son definitivos**, sin tocar
+nada de lo oficial.
+
+### Qué agrega la V.3.0
+
+Es la tabla **detallada por código** (igual que la V.2.0) **más dos columnas**:
+
+- **`ADICIONAL`** → `FACTURADO` / `SOLICITADO`
+- **`CTO_086`** → `CONTRATADO` / `PENDIENTE` / nombre de la clase
+
+Aplica a la **TABLA ESTUDIOS** (filas por código) y a la **TABLA PROCEDIMIENTOS**.
+
+### Aislamiento (garantías)
+
+| Se crea / modifica | NO se modifica |
+|---|---|
+| `informe_MM.YY_V.3.0.html` y `.pdf` (archivos **nuevos**) | `informe_MM.YY_V.1.0.*` y `informe_MM.YY_V.2.0.*` (oficiales) |
+| `datos/Tarifario_CTO_086_2026_BORRADOR.xlsx` | `datos/Tarifario_CTO_086_2026.xlsx` (tarifario oficial) |
+
+### Flujo de trabajo
+
+```bash
+# 1) Crear la copia del tarifario (una sola vez)
+cp datos/Tarifario_CTO_086_2026.xlsx datos/Tarifario_CTO_086_2026_BORRADOR.xlsx
+
+# 2) Editar los precios en el BORRADOR (hoja TARIFARIO, columna TARIFAS_2026)
+
+# 3) Generar el borrador
+Rscript 6_generar_borrador.R                # 06.26 y 07.26
+Rscript 6_generar_borrador.R 06.26 07.26    # meses indicados
+Rscript 6_generar_borrador.R 06.26 --sin-pdf # solo HTML
+```
+
+### Parámetros nuevos en `4_generar_informe.R`
+
+```r
+generar_informe_mes(mes, version = "3.0",
+                    ruta_tarifario  = "datos/Tarifario_CTO_086_2026_BORRADOR.xlsx",
+                    cant_junta_param = 105)
+```
+
+| Parámetro | Default | Para qué |
+|---|---|---|
+| `version` | `c("1.0", "2.0")` | `"3.0"` = detallada + `ADICIONAL` y `CTO_086` |
+| `ruta_tarifario` | `NULL` (oficial de `datos/`) | Usar un tarifario alternativo |
+| `cant_junta_param` | `NULL` (100 por Rscript / pregunta en RStudio) | Fijar HORA JUNTA MEDICA sin preguntar |
+
+> Los valores por defecto **reproducen el comportamiento oficial**: `main.R` y los
+> Pasos 3-4-5 no cambian. La versión 3.0 también se puede exportar a PDF con
+> `5_exportar_pdf.R` (acepta `"3.0"`).
+
+### Cantidad de HORA JUNTA MEDICA por mes (según los informes oficiales)
+
+| Mes | Cantidad |
+|---|---|
+| 06.26 | 105 |
+| 07.26 | 116 |
+| 08.26 | 100 |
+| 09.26 | 100 |
+
+`6_generar_borrador.R` las aplica automáticamente (vector `junta_por_mes`) para que el
+borrador sea comparable con el informe oficial de cada mes.
+
+### Nota sobre el tarifario oficial (2026-10-25)
+
+El tarifario oficial en `datos/` **no coincide** con el que produjo el informe de
+07.26: el código `559301` (REEMPLAZO DE CATETER DE NEFROSTOMIA) está en **320.719** y
+en ese informe figuraba en **483.080**. Por eso **regenerar el 07.26 oficial
+cambiaría sus totales** (diferencia exacta: 91 × 162.361 = 14.774.851).

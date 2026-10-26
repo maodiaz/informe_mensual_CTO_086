@@ -61,6 +61,7 @@ Son los **insumos xlsx** que usted debe asegurar que estén en `datos/`:
 | `Tarifario_CTO_086_2026.xlsx` | **El tarifario con los precios** (lo genera el proyecto tarifario) | **Sí** | Paso 4 |
 | `CUPS.2025.xlsx` | Catálogo de referencia para completar códigos | **Sí** | Paso 2 |
 | `tarifas_especiales_2026.xlsx` | Tarifas especiales (solo junta médica y servicio nocturno) | No (se usan valores por defecto) | Paso 4 |
+| `Tarifario_CTO_086_2026_BORRADOR.xlsx` | Copia del tarifario para probar **precios NO definitivos** | No (solo para el informe borrador) | Sección 11 |
 
 **Además, tenga a la mano el Excel del mes** (el archivo de origen con los
 datos del mes). No necesita estar dentro de la carpeta `datos/`: el Paso 1 le
@@ -144,6 +145,10 @@ responde unas pocas preguntas y el programa hace el trabajo.
 >
 > **Flujo normal de un mes: Pasos 1 → 2 → 4 → 5.** El Paso 3 es opcional (solo
 > cuando cambian los precios del catálogo).
+>
+> **¿Necesita un informe borrador con precios de prueba?** Hay un script aparte,
+> `6_generar_borrador.R`, que genera la **versión 3.0** sin tocar los informes
+> oficiales. Vea la **sección 11**.
 
 ---
 
@@ -442,6 +447,7 @@ datos/m.07.26_normalizacion_detalle.csv  ← detalle de códigos asignados (Paso
 | "No se encontró Google Chrome" | Chrome no está instalado | Instale **Google Chrome** y repita el Paso 5 |
 | El informe se ve con precios viejos | El catálogo cambió y no se actualizó | Repita **Paso 3 con `--actualizar`** y luego Pasos 4 y 5 |
 | Escribí mal el mes (ej. `7` en vez de `07`) | El formato debe ser de 2 dígitos | Use `07`, `08`, `09`... |
+| "No se encontró el tarifario del borrador" (sección 11) | Falta `datos/Tarifario_CTO_086_2026_BORRADOR.xlsx` | Cópielo del oficial: `cp datos/Tarifario_CTO_086_2026.xlsx datos/Tarifario_CTO_086_2026_BORRADOR.xlsx` |
 
 ---
 
@@ -489,7 +495,97 @@ Rscript 5_exportar_pdf.R 07.26
 # ── OPCIONAL ────────────────────────────────────────────────
 # Paso 3 — Actualizar el catálogo (solo cuando cambian los precios)
 Rscript 3_cargar_catalogo.R --actualizar
+
+# ── BORRADOR (precios de prueba, NO definitivos) ────────────
+# Genera la versión 3.0 sin tocar los informes oficiales
+Rscript 6_generar_borrador.R
 ```
 
 **El orden normal de un mes es:** 1 → 2 → 4 → 5 (el Paso 3 es opcional).
 Cuando cambien los precios: **3 (con `--actualizar`) → 4 → 5**.
+
+---
+
+## 11. Informe BORRADOR (versión 3.0) — precios NO definitivos
+
+**Para qué sirve:** generar una **nueva versión del informe** con **precios de prueba**
+que todavía **no son definitivos**, sin tocar los informes oficiales ni el tarifario
+oficial.
+
+### ¿Qué la diferencia de las otras versiones?
+
+Es igual de detallada que la **V.2.0** (una línea por código) pero con **dos columnas
+más**:
+
+| Columna | Qué muestra |
+|---|---|
+| **ADICIONAL** | Si el estudio es **FACTURADO** o **SOLICITADO** |
+| **CTO_086** | Si está **CONTRATADO**, **PENDIENTE**, o el nombre de la clase |
+
+### Lo importante: no daña nada
+
+| Esto SÍ se crea / cambia | Esto NO se toca |
+|---|---|
+| `informe_MM.YY_V.3.0.html` y `.pdf` (archivos **nuevos**) | `informe_MM.YY_V.1.0.*` y `informe_MM.YY_V.2.0.*` (los oficiales) |
+| `datos/Tarifario_CTO_086_2026_BORRADOR.xlsx` (su copia de trabajo) | `datos/Tarifario_CTO_086_2026.xlsx` (el tarifario oficial) |
+
+### Cómo hacerlo, paso a paso
+
+**1. Crear su copia del tarifario** (solo la primera vez).
+En la pestaña **Terminal**, escriba y presione **Enter**:
+
+```
+cp datos/Tarifario_CTO_086_2026.xlsx datos/Tarifario_CTO_086_2026_BORRADOR.xlsx
+```
+
+**2. Cambiar los precios de prueba.**
+Abra `datos/Tarifario_CTO_086_2026_BORRADOR.xlsx` en Excel, vaya a la hoja
+**`TARIFARIO`** y modifique la columna **`TARIFAS_2026`**. Guarde y cierre.
+
+**3. Generar el borrador.** En la Terminal:
+
+```
+Rscript 6_generar_borrador.R
+```
+
+Eso genera el borrador de **junio (06.26)** y **julio (07.26)**. Si quiere otros meses,
+o solo el HTML:
+
+```
+Rscript 6_generar_borrador.R 08.26 09.26        # solo esos meses
+Rscript 6_generar_borrador.R 06.26 --sin-pdf    # solo el HTML (sin PDF)
+```
+
+**¿Cómo saber que salió bien?**
+Al final aparece:
+
+```
+LISTO. Archivos generados (borrador, no definitivos):
+   informe_06.26_V.3.0.html
+   informe_06.26_V.3.0.pdf
+   ...
+ Los informes oficiales V.1.0 y V.2.0 NO se modificaron.
+```
+
+### Nota importante sobre la cantidad de "HORA JUNTA MEDICA"
+
+Cada informe oficial usó una cantidad distinta de horas de junta médica:
+
+| Mes | Horas usadas |
+|---|---|
+| 06.26 | 105 |
+| 07.26 | 116 |
+| 08.26 | 100 |
+| 09.26 | 100 |
+
+El script del borrador **ya las aplica automáticamente**, para que el borrador se
+pueda comparar con el informe oficial del mismo mes.
+
+> Si algún mes cambia, actualice el valor en la lista `junta_por_mes` al inicio de
+> `6_generar_borrador.R`.
+
+### ⚠️ Advertencia
+
+Los precios del borrador **no son definitivos**. Cuando los precios queden
+definitivos, el camino correcto es actualizar el tarifario **oficial** (proyecto
+`tarifario_CTO_086_V_2`) y regenerar los informes oficiales con los **Pasos 3 → 4 → 5**.

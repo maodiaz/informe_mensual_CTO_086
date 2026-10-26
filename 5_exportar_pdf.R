@@ -9,7 +9,7 @@
 # USO:
 #   Rscript 5_exportar_pdf.R MM.YY [version]
 #     MM.YY   : mes.año (ej. 07.26 o 07.2026)
-#     version : "1.0", "2.0" o ambos (default: ambos)
+#     version : "1.0", "2.0", "3.0" o los que se indiquen (default: 1.0 y 2.0)
 #   Salida   : informe_MM.YY_V.{version}.pdf
 #
 # PREREQUISITO: el HTML debe existir (generarlo antes con 4_generar_informe.R).
@@ -48,7 +48,7 @@ encontrar_chrome <- function() {
 # ------------------------------------------------------------------------------
 # Convierte informe_MM.YY_V.{version}.html a PDF con Chrome headless.
 #   mes_arg : "MM.YY" (acepta 07.26 o 07.2026)
-#   version : "1.0", "2.0" o ambos (default: ambos)
+#   version : "1.0", "2.0", "3.0" o los que se indiquen (default: 1.0 y 2.0)
 # Al ser source() desde main.R solo se define la función; por Rscript se ejecuta.
 exportar_pdf <- function(mes_arg, version = c("1.0", "2.0")) {
 
@@ -56,9 +56,9 @@ exportar_pdf <- function(mes_arg, version = c("1.0", "2.0")) {
     stop("Falta el mes. Uso: exportar_pdf(\"MM.YY\") o Rscript 5_exportar_pdf.R MM.YY [version]")
   }
   version <- unique(version)
-  if (!all(version %in% c("1.0", "2.0"))) {
+  if (!all(version %in% c("1.0", "2.0", "3.0"))) {
     stop("Versión(es) inválida(s): ", paste(version, collapse = ", "),
-         ". Use '1.0' y/o '2.0'.")
+         ". Use '1.0', '2.0' y/o '3.0'.")
   }
 
   # Normalizar MM.YY (acepta 07.26 o 07.2026)

@@ -10,7 +10,8 @@
 #
 #   Rscript 4_generar_informe.R MM.YY [version]
 #     MM.YY   : mes.año (acepta "07.26" o "07.2026")
-#     version : "1.0" (TABLA ESTUDIOS plana) o "2.0" (expandida, default)
+#     version : "1.0" (TABLA ESTUDIOS plana), "2.0" (expandida, default) o
+#               "3.0" (expandida + columnas ADICIONAL y CTO_086; informe borrador)
 #   Salida   : informe_MM.YY_V.{version}.html
 #
 # Flujo:
@@ -47,14 +48,21 @@ source("2_limpiar_mes.R")   # define limpiar_mes() (la normalización la hace el
 # ================================================================================
 # 1. Función principal: generar_informe_mes(mes_arg, version = "2.0")
 # ------------------------------------------------------------------------------
-# mes_arg : "MM.YY" (acepta 07.26 o 07.2026)
-# version : "1.0" (TABLA ESTUDIOS plana) o "2.0" (expandida, default)
+# mes_arg        : "MM.YY" (acepta 07.26 o 07.2026)
+# version        : "1.0" (TABLA ESTUDIOS plana), "2.0" (expandida, default) o
+#                  "3.0" (expandida + ADICIONAL y CTO_086; informe borrador)
+# ruta_tarifario : NULL = tarifario OFICIAL de 'datos/' (por defecto);
+#                  ruta a un xlsx alternativo (p. ej. un tarifario BORRADOR con
+#                  precios no definitivos).
+# cant_junta_param : NULL = 100 por Rscript / pregunta en RStudio (por defecto);
+#                  número = cantidad fija de HORA JUNTA MEDICA (no pregunta).
 # Se invoca por Rscript (4_generar_informe.R MM.YY) o, al ser source() desde
 # main.R (PASO 4), llamando directamente a generar_informe_mes("MM.YY").
 # Las decisiones se CONSULTAN al usuario en RStudio (interactivo); por Rscript
 # se usan los valores por defecto.
 # ================================================================================
-generar_informe_mes <- function(mes_arg, version = c("1.0", "2.0")) {
+generar_informe_mes <- function(mes_arg, version = c("1.0", "2.0"),
+                                ruta_tarifario = NULL, cant_junta_param = NULL) {
 
   meses_es <- c("enero","febrero","marzo","abril","mayo","junio","julio",
                 "agosto","septiembre","octubre","noviembre","diciembre")
@@ -75,9 +83,9 @@ generar_informe_mes <- function(mes_arg, version = c("1.0", "2.0")) {
     stop("Falta el mes. Uso: generar_informe_mes(\"MM.YY\") o Rscript 4_generar_informe.R MM.YY [version]")
   }
   version <- unique(version)
-  if (!all(version %in% c("1.0", "2.0"))) {
+  if (!all(version %in% c("1.0", "2.0", "3.0"))) {
     stop("Versión(es) inválida(s): ", paste(version, collapse = ", "),
-         ". Use '1.0' (plana) y/o '2.0' (expandida).")
+         ". Use '1.0' (plana), '2.0' (expandida) y/o '3.0' (detallada + ADICIONAL/CTO_086).")
   }
 
   # Parsear MM y año (acepta 07.26 o 07.2026)
@@ -109,20 +117,35 @@ generar_informe_mes <- function(mes_arg, version = c("1.0", "2.0")) {
     "\nEl Paso 2 (normalización) es OBLIGATORIO. Ejecute primero:",
     "\n    Rscript 2_limpiar_mes.R ", mm_yy)
 
-  # Catálogo del tarifario: el usuario lo aporta como XLSX (Tarifario_CTO_086_2026.xlsx).
-  # Respaldo: catalogo_cto086_2026.rds (formato anterior).
-  ruta_cat_xlsx <- file.path(getwd(), "datos", "Tarifario_CTO_086_2026.xlsx")
-  ruta_cat_rds  <- file.path(getwd(), "datos", "catalogo_cto086_2026.rds")
-  if (file.exists(ruta_cat_xlsx)) {
+  # Catálogo del tarifario: por defecto el OFICIAL de 'datos/'
+  # (Tarifario_CTO_086_2026.xlsx; se acepta también el nombre anterior
+  # tarifario_cto086_2026.xlsx). Si se pasa 'ruta_tarifario' se usa ese archivo
+  # (p. ej. un tarifario BORRADOR con precios experimentales).
+  # Respaldo: catalogo_cto086_2026.rds.
+  ruta_cat_rds <- file.path(getwd(), "datos", "catalogo_cto086_2026.rds")
+  if (!is.null(ruta_tarifario)) {
+    if (!file.exists(ruta_tarifario)) {
+      stop("No se encontró el tarifario indicado: ", ruta_tarifario)
+    }
+    ruta_cat_xlsx <- ruta_tarifario
+  } else {
+    nombres_tarifario <- c("Tarifario_CTO_086_2026.xlsx", "tarifario_cto086_2026.xlsx")
+    rutas_tarifario   <- file.path(getwd(), "datos", nombres_tarifario)
+    ruta_cat_xlsx     <- rutas_tarifario[file.exists(rutas_tarifario)][1]
+  }
+  if (!is.na(ruta_cat_xlsx)) {
     ruta_cat <- ruta_cat_xlsx
     cat <- readxl::read_excel(ruta_cat)
   } else if (file.exists(ruta_cat_rds)) {
     ruta_cat <- ruta_cat_rds
     cat <- readr::read_rds(ruta_cat)
   } else {
-    stop("No se encontró el tarifario: ", ruta_cat_xlsx,
-         "\nColoque 'Tarifario_CTO_086_2026.xlsx' en 'datos/' (o ejecute: Rscript 3_cargar_catalogo.R --actualizar)")
+    stop("No se encontró el tarifario en 'datos/'.",
+         "\n  Nombres buscados: Tarifario_CTO_086_2026.xlsx | tarifario_cto086_2026.xlsx",
+         "\n  Coloque 'Tarifario_CTO_086_2026.xlsx' en 'datos/' (o ejecute: ",
+         "Rscript 3_cargar_catalogo.R --actualizar)")
   }
+  cat("[i] Tarifario usado:", ruta_cat, "\n")
   # El tarifario xlsx trae la tarifa en 'TARIFAS_2026' (el rds la trae en 'TARIFA').
   if ("TARIFAS_2026" %in% names(cat) && !"TARIFA" %in% names(cat)) {
     names(cat)[names(cat) == "TARIFAS_2026"] <- "TARIFA"
@@ -163,7 +186,11 @@ tarifa_junta <- obtener_tarifa("JUNTA", 133897)
 tarifa_fijo  <- obtener_tarifa("VALOR FIJO", 62618981)
 cant_junta   <- 100L   # CANTIDAD provisional (se consulta al usuario en RStudio)
 cant_fijo    <- 1L
-if (interactive()) {
+if (!is.null(cant_junta_param)) {
+  # Cantidad indicada por quien llama (p. ej. el borrador, para replicar la del
+  # informe oficial). En este caso NO se pregunta.
+  cant_junta <- as.integer(cant_junta_param)
+} else if (interactive()) {
   entrada_junta <- readline(prompt = "CANTIDAD HORA JUNTA MEDICA (provisional = 100). Enter para usar 100 o escribe el número: ")
   entrada_junta <- trimws(entrada_junta)
   if (grepl("^[0-9]+$", entrada_junta)) cant_junta <- as.integer(entrada_junta)
@@ -208,7 +235,11 @@ cod_final_n <- norm(mes$CODIGO)
 cat_map <- data.frame(
   CODIGO = norm(cat$CODIGO),
   CLASE = cat$CLASE, DESCRIPCION = cat$DESCRIPCION,
-  ADICIONAL = cat$ADICIONAL, TARIFA = cat$TARIFA,
+  ADICIONAL = cat$ADICIONAL,
+  # CTO_086 se usa solo en la versión 3.0 (informe borrador). Si el tarifario no
+  # la trae, queda NA y la columna se muestra vacía.
+  CTO_086 = if ("CTO_086" %in% names(cat)) as.character(cat$CTO_086) else NA_character_,
+  TARIFA = cat$TARIFA,
   stringsAsFactors = FALSE
 ) %>% dplyr::distinct(CODIGO, .keep_all = TRUE)
 rownames(cat_map) <- NULL
@@ -363,6 +394,7 @@ tabla_proc <- data.frame(
   DESCRIPCION = proc$DESCRIPCION,
   TARIFA     = proc$TARIFA,
   ADICIONAL  = proc$ADICIONAL,
+  CTO_086    = proc$CTO_086,
   CANTIDAD   = vapply(proc$CODIGO, function(cd)
     sum(cod_final_n == cd & !excluidos & !is.na(cod_final_n)), integer(1)),
   stringsAsFactors = FALSE
@@ -379,7 +411,7 @@ total_proc   <- sum(tabla_proc$VALOR_TOTAL)
 total_proc_c <- sum(tabla_proc$CANTIDAD)
 tabla_proc <- rbind(tabla_proc, data.frame(
   CODIGO = "TOTAL", DESCRIPCION = "", TARIFA = NA_real_,
-  ADICIONAL = "", CANTIDAD = total_proc_c, VALOR_TOTAL = total_proc
+  ADICIONAL = "", CTO_086 = "", CANTIDAD = total_proc_c, VALOR_TOTAL = total_proc
 ))
 
 # ================================================================================
@@ -451,20 +483,40 @@ clases_info <- cat_map %>%
   dplyr::distinct(CLASE, TARIFA) %>%
   dplyr::arrange(CLASE)
 est_codes <- cat_map[cat_map$CLASE != "PROCEDIMIENTO",
-                    c("CLASE", "CODIGO", "DESCRIPCION", "TARIFA")]
+                    c("CLASE", "CODIGO", "DESCRIPCION", "ADICIONAL", "CTO_086", "TARIFA")]
 est_codes$CANTIDAD <- vapply(est_codes$CODIGO, function(cd)
   sum(cod_final_n == cd & !excluidos & !is.na(cod_final_n)), integer(1))
 est_codes$VALOR_TOTAL <- est_codes$CANTIDAD * est_codes$TARIFA
 
-# Construye la TABLA ESTUDIOS según la versión: "1.0" (plana) o "2.0" (expandida)
+# Construye la TABLA ESTUDIOS según la versión:
+#   "1.0" = plana (una fila por CLASE)
+#   "2.0" = expandida (una fila por código)
+#   "3.0" = expandida + columnas ADICIONAL y CTO_086 (informe borrador)
 construir_html_tabla_est <- function(ver) {
-  # Fila estándar de la tabla (clase, tarifa, cantidad, valor, clase CSS opcional)
-  fila_html <- function(clase, tarifa, cantidad, valor, cl = "") {
-    paste0("<tr", if (cl != "") paste0(" class='", cl, "'") else "", ">",
-           "<td>", esc(clase), "</td>",
+  extra <- identical(as.character(ver), "3.0")
+  celda <- function(x) ifelse(is.na(x), "", esc(as.character(x)))
+
+  # Fila estándar de la tabla (clase, tarifa, cantidad, valor, clase CSS opcional).
+  # En la versión 3.0 se intercalan ADICIONAL y CTO_086 antes de TARIFA.
+  fila_html <- function(clase, tarifa, cantidad, valor, cl = "",
+                        adicional = "", cto = "", clase_celda = "") {
+    celdas_extra <- if (extra) paste0("<td>", celda(adicional), "</td>",
+                                      "<td>", celda(cto), "</td>") else ""
+    td_clase <- paste0("<td",
+                       if (clase_celda != "") paste0(" class='", clase_celda, "'") else "",
+                       ">", esc(clase), "</td>")
+    paste0("<tr", if (cl != "") paste0(" class='", cl, "'") else "",">",
+           td_clase, celdas_extra,
            "<td class='num'>", ifelse(is.na(tarifa), "", fmt_num(tarifa)), "</td>",
            "<td class='num'>", ifelse(is.na(cantidad), "", cantidad), "</td>",
            "<td class='num'>", fmt_num(valor), "</td></tr>")
+  }
+
+  cabecera <- if (extra) {
+    paste0("<table><thead><tr><th>CLASE / CÓDIGO</th><th>ADICIONAL</th><th>CTO_086</th>",
+           "<th>TARIFA</th><th>CANTIDAD</th><th>VALOR TOTAL</th></tr></thead><tbody>")
+  } else {
+    "<table><thead><tr><th>CLASE</th><th>TARIFA</th><th>CANTIDAD</th><th>VALOR TOTAL</th></tr></thead><tbody>"
   }
   if (ver == "1.0") {
     # TABLA ESTUDIOS plana (V.1.0): una fila por CLASE (hasta TORACENTESIS)
@@ -483,10 +535,9 @@ construir_html_tabla_est <- function(ver) {
       fila_html("SUBTOTAL ADICIONALES", NA, NA, subtotal_adicionales, "subtotal-adicionales"),
       fila_html("TOTAL", NA, NA, total_estudios, "total")
     )
-    c("<table><thead><tr><th>CLASE</th><th>TARIFA</th><th>CANTIDAD</th><th>VALOR TOTAL</th></tr></thead><tbody>",
-      filas, "</tbody></table>")
+    c(cabecera, filas, "</tbody></table>")
   } else {
-    # TABLA ESTUDIOS expandida (V.2.0): CLASE + códigos que la componen
+    # TABLA ESTUDIOS expandida (V.2.0 y V.3.0): CLASE + códigos que la componen
     filas <- character(0)
     for (cl in clases_info$CLASE) {
       tar  <- clases_info$TARIFA[clases_info$CLASE == cl]
@@ -494,18 +545,13 @@ construir_html_tabla_est <- function(ver) {
       cods <- cods[order(cods$CODIGO), , drop = FALSE]
       cods <- cods[cods$CANTIDAD > 0, , drop = FALSE]   # solo códigos con conteo > 0
       cnt  <- sum(cods$CANTIDAD)
-      filas <- c(filas, paste0(
-        "<tr class='clase'><td>", esc(cl), "</td>",
-        "<td class='num'>", fmt_num(tar), "</td>",
-        "<td class='num'>", cnt, "</td>",
-        "<td class='num'>", fmt_num(cnt * tar), "</td></tr>"))
+      filas <- c(filas, fila_html(cl, tar, cnt, cnt * tar, "clase"))
       for (k in seq_len(nrow(cods))) {
-        filas <- c(filas, paste0(
-          "<tr class='sub'><td class='code'>", esc(cods$CODIGO[k]), " - ",
-          esc(cods$DESCRIPCION[k]), "</td>",
-          "<td class='num'>", fmt_num(cods$TARIFA[k]), "</td>",
-          "<td class='num'>", cods$CANTIDAD[k], "</td>",
-          "<td class='num'>", fmt_num(cods$VALOR_TOTAL[k]), "</td></tr>"))
+        filas <- c(filas, fila_html(
+          paste0(cods$CODIGO[k], " - ", cods$DESCRIPCION[k]),
+          cods$TARIFA[k], cods$CANTIDAD[k], cods$VALOR_TOTAL[k],
+          cl = "sub", adicional = cods$ADICIONAL[k], cto = cods$CTO_086[k],
+          clase_celda = "code"))
       }
     }
     filas <- c(filas,
@@ -515,12 +561,13 @@ construir_html_tabla_est <- function(ver) {
       fila_html("SUBTOTAL ADICIONALES", NA, NA, subtotal_adicionales, "subtotal-adicionales"),
       fila_html("TOTAL", NA, NA, total_estudios, "total")
     )
-    c("<table><thead><tr><th>CLASE</th><th>TARIFA</th><th>CANTIDAD</th><th>VALOR TOTAL</th></tr></thead><tbody>",
-      filas, "</tbody></table>")
+    c(cabecera, filas, "</tbody></table>")
   }
 }
 
-html_tabla_proc <- {
+# Construye la TABLA PROCEDIMIENTOS. La versión 3.0 agrega la columna CTO_086.
+construir_html_tabla_proc <- function(ver) {
+  extra <- identical(as.character(ver), "3.0")
   filas <- vapply(seq_len(nrow(tabla_proc)), function(i) {
     r <- tabla_proc[i, ]
     es_total <- r$CODIGO == "TOTAL"
@@ -529,11 +576,19 @@ html_tabla_proc <- {
                   "<td class='num'>", ifelse(is.na(r$TARIFA), "", fmt_num(r$TARIFA)), "</td>",
                   "<td class='num'>", ifelse(is.na(r$CANTIDAD), "", r$CANTIDAD), "</td>",
                   "<td class='num'>", fmt_num(r$VALOR_TOTAL), "</td>",
-                  "<td>", esc(r$ADICIONAL), "</td>")
+                  "<td>", esc(r$ADICIONAL), "</td>",
+                  if (extra) paste0("<td>",
+                                    ifelse(is.na(r$CTO_086), "", esc(as.character(r$CTO_086))),
+                                    "</td>") else "")
     paste0("<tr", ifelse(es_total, " class='total'", ""), ">", tds, "</tr>")
   }, character(1))
-  c("<table><thead><tr><th>CODIGO</th><th>DESCRIPCION</th><th>TARIFA</th><th>CANTIDAD</th><th>VALOR TOTAL</th><th>ADICIONAL</th></tr></thead><tbody>",
-    filas, "</tbody></table>")
+  cab <- if (extra) {
+    paste0("<table><thead><tr><th>CODIGO</th><th>DESCRIPCION</th><th>TARIFA</th>",
+           "<th>CANTIDAD</th><th>VALOR TOTAL</th><th>ADICIONAL</th><th>CTO_086</th></tr></thead><tbody>")
+  } else {
+    "<table><thead><tr><th>CODIGO</th><th>DESCRIPCION</th><th>TARIFA</th><th>CANTIDAD</th><th>VALOR TOTAL</th><th>ADICIONAL</th></tr></thead><tbody>"
+  }
+  c(cab, filas, "</tbody></table>")
 }
 
 resumen <- paste0(
@@ -576,7 +631,8 @@ salvedades <- paste0(
 # Genera las DOS versiones del informe (V.1.0 resumida y V.2.0 detallada)
 for (v in version) {
   ruta_html <- file.path(getwd(), paste0("informe_", mm_yy, "_V.", v, ".html"))
-  html_tabla_est <- construir_html_tabla_est(v)
+  html_tabla_est  <- construir_html_tabla_est(v)
+  html_tabla_proc <- construir_html_tabla_proc(v)
 
   html <- c(
     "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>",
