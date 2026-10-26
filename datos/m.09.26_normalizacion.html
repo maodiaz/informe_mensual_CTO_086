@@ -1,0 +1,28 @@
+<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>
+<title>Informe de Normalización — Mes 09.26</title>
+<style>
+body{font-family:Calibri,Arial,sans-serif;margin:40px;color:#222;font-size:11pt}
+h1{font-size:18pt;color:#1f4e79;border-bottom:2px solid #1f4e79;padding-bottom:6px}
+h2{font-size:13pt;color:#1f4e79;margin-top:24px}
+p{text-align:justify;line-height:1.5}
+table{border-collapse:collapse;width:100%;font-size:10pt;margin:12px 0}
+th,td{border:1px solid #999;padding:5px 8px;text-align:left;vertical-align:top}
+th{background:#1f4e79;color:#fff}
+td.num{text-align:right;white-space:nowrap}
+@media print{body{margin:15mm}}
+</style></head><body>
+<h1>Informe de Normalización — Mes 09.26</h1>
+<p><strong>Fecha de elaboración:</strong> 
+2026-10-14
+</p>
+<h2>1. ¿Qué es la normalización y por qué se hace?</h2>
+<p>Este documento explica de forma sencilla qué se hizo con el archivo del mes <strong>09.26</strong> al <strong>normalizar los datos</strong>. Normalizar es preparar la información para poder calcular el informe: se quitan las filas que no sirven (por ejemplo, las que no tienen estado APROBADO o las filas administrativas), se corrigen los códigos y se completan los que faltan, de modo que <strong>todas las filas queden con su código</strong> y listas para compararlas con el tarifario de precios.</p>
+<h2>2. Qué se hizo con el mes</h2>
+<p>El archivo original traía <strong>10.553</strong> filas. Durante la normalización se <strong>descartaron 843</strong> filas porque su estado no era APROBADO y <strong>1</strong> filas administrativas (“Philips, Admin”), por lo que quedaron <strong>9.709</strong> filas. Se normalizaron <strong>63</strong> códigos que terminaban en “L” y se <strong>completaron 72</strong> códigos que estaban vacíos (72 con la tabla de correspondencias conocida y 0 buscando el parecido con CUPS.2025). Al final quedaron <strong>9.709</strong> filas, con <strong>0</strong> filas sin código. Estado: <strong>OK: ninguna fila quedó sin código</strong>.</p>
+<table><thead><tr><th>Concepto</th><th>Cantidad</th><th>Explicación</th></tr></thead><tbody>
+<tr><td>Mes procesado</td><td class='num'>09.26</td><td>Mes y año del archivo procesado</td></tr><tr><td>Filas crudas del mes</td><td class='num'>10.553</td><td>Filas que traía el Excel original</td></tr><tr><td>Filas descartadas (STTEXT ≠ Aprobado)</td><td class='num'>843</td><td>Se eliminan: su estado no es APROBADO (equivale a DOCTEXT vacío)</td></tr><tr><td>Filas descartadas (DOCTEXT = Philips, Admin)</td><td class='num'>1</td><td>Se eliminan: filas administrativas</td></tr><tr><td>Filas tras descartes</td><td class='num'>9.709</td><td>Crudas menos los descartes anteriores</td></tr><tr><td>Códigos con 'L' final normalizados</td><td class='num'>63</td><td>Ej.: 879301L -&gt; 879301</td></tr><tr><td>Códigos vacíos al inicio</td><td class='num'>82</td><td>Celdas de código sin valor antes de asignar</td></tr><tr><td>Códigos asignados por mapeo</td><td class='num'>72</td><td>Código asignado con la tabla conocida</td></tr><tr><td>Códigos asignados por similitud</td><td class='num'>0</td><td>Código asignado por parecido con CUPS.2025</td></tr><tr><td>Códigos vacíos tras la asignación</td><td class='num'>0</td><td>Celdas aún vacías tras mapeo + similitud</td></tr><tr><td>Prestación sin código descartada</td><td class='num'>0</td><td>AG BIOPSIA ... DE GLÁNDULA (no tiene código único)</td></tr><tr><td>Filas resultantes (mes normalizado)</td><td class='num'>9.709</td><td>Filas que quedan listas para el informe</td></tr><tr><td>Códigos vacíos/NA al final</td><td class='num'>0</td><td>OK - ninguna fila sin código</td></tr>
+</tbody></table>
+<h2>3. Códigos asignados automáticamente</h2><p>Estos estudios llegaron <strong>sin código</strong> en el archivo del mes y el programa les asignó uno automáticamente. “mapeo” significa que se usó una tabla de correspondencias ya conocida; “similitud” significa que se buscó el código más parecido en CUPS.2025:</p><table><thead><tr><th>Estudio (PRESTACION)</th><th>Código asignado</th><th>Cómo se asignó</th></tr></thead><tbody><tr><td>US DOPPLER DE VASOS ARTERIALES DE MIEMBROS INFERIORES</td><td>882308</td><td>mapeo (script 5)</td></tr><tr><td>US TORACENTESIS DIAGNÓSTICA</td><td>345001</td><td>mapeo (script 5)</td></tr><tr><td>CT AXIAL COMPUTADA EN RECONSTRUCCION TRIDIMENSIONAL</td><td>879910</td><td>mapeo (script 5)</td></tr><tr><td>RM RESONANCIA MAGNÉTICA DE VÍA URINARIA [URORRESONANCIA]</td><td>883435</td><td>mapeo (script 5)</td></tr></tbody></table>
+<h2>4. Resultado</h2>
+<p>El mes quedó <strong>listo para generar el informe</strong>. Si quiere revisar los datos en detalle, también puede abrir los archivos <em>m.09.26_normalizacion.csv</em> y <em>m.09.26_normalizacion_detalle.csv</em> (se abren con Excel).</p>
+</body></html>
