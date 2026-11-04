@@ -10,8 +10,9 @@
 #
 #   Rscript 4_generar_informe.R MM.YY [version]
 #     MM.YY   : mes.año (acepta "07.26" o "07.2026")
-#     version : "1.0" (TABLA ESTUDIOS plana), "2.0" (expandida, default) o
+#     version : "1.0" (TABLA ESTUDIOS plana), "2.0" (expandida, default),
 #               "3.0" (expandida + columnas ADICIONAL y CTO_086; informe borrador)
+#               o "4.0" (SOLO CANTIDADES, sin columnas de dinero)
 #   Salida   : informe_MM.YY_V.{version}.html
 #
 # Flujo:
@@ -49,8 +50,9 @@ source("2_limpiar_mes.R")   # define limpiar_mes() (la normalización la hace el
 # 1. Función principal: generar_informe_mes(mes_arg, version = "2.0")
 # ------------------------------------------------------------------------------
 # mes_arg        : "MM.YY" (acepta 07.26 o 07.2026)
-# version        : "1.0" (TABLA ESTUDIOS plana), "2.0" (expandida, default) o
-#                  "3.0" (expandida + ADICIONAL y CTO_086; informe borrador)
+# version        : "1.0" (TABLA ESTUDIOS plana), "2.0" (expandida, default),
+#                  "3.0" (expandida + ADICIONAL y CTO_086; informe borrador) o
+#                  "4.0" (SOLO CANTIDADES: sin TARIFA ni VALOR TOTAL)
 # ruta_tarifario : NULL = tarifario OFICIAL de 'datos/' (por defecto);
 #                  ruta a un xlsx alternativo (p. ej. un tarifario BORRADOR con
 #                  precios no definitivos).
@@ -87,9 +89,10 @@ generar_informe_mes <- function(mes_arg, version = c("1.0", "2.0"),
     stop("Falta el mes. Uso: generar_informe_mes(\"MM.YY\") o Rscript 4_generar_informe.R MM.YY [version]")
   }
   version <- unique(version)
-  if (!all(version %in% c("1.0", "2.0", "3.0"))) {
+  if (!all(version %in% c("1.0", "2.0", "3.0", "4.0"))) {
     stop("Versión(es) inválida(s): ", paste(version, collapse = ", "),
-         ". Use '1.0' (plana), '2.0' (expandida) y/o '3.0' (detallada + ADICIONAL/CTO_086).")
+         ". Use '1.0' (plana), '2.0' (expandida), '3.0' (detallada + ADICIONAL/CTO_086) ",
+         "o '4.0' (solo cantidades).")
   }
 
   # Parsear MM y año (acepta 07.26 o 07.2026)
@@ -499,12 +502,16 @@ est_codes$VALOR_TOTAL <- est_codes$CANTIDAD * est_codes$TARIFA
 #   "1.0" = plana (una fila por CLASE)
 #   "2.0" = expandida (una fila por código)
 #   "3.0" = expandida + columnas ADICIONAL y CTO_086 (informe borrador)
+#   "4.0" = expandida SOLO CANTIDADES (sin TARIFA, ni VALOR TOTAL, ni
+#           SUBTOTAL ADICIONALES, ni TOTAL)
 construir_html_tabla_est <- function(ver) {
-  extra <- identical(as.character(ver), "3.0")
+  extra     <- identical(as.character(ver), "3.0")
+  solo_cant <- identical(as.character(ver), "4.0")
   celda <- function(x) ifelse(is.na(x), "", esc(as.character(x)))
 
   # Fila estándar de la tabla (clase, tarifa, cantidad, valor, clase CSS opcional).
   # En la versión 3.0 se intercalan ADICIONAL y CTO_086 antes de TARIFA.
+  # En la versión 4.0 se deja únicamente la cantidad.
   fila_html <- function(clase, tarifa, cantidad, valor, cl = "",
                         adicional = "", cto = "", clase_celda = "") {
     celdas_extra <- if (extra) paste0("<td>", celda(adicional), "</td>",
@@ -512,14 +519,20 @@ construir_html_tabla_est <- function(ver) {
     td_clase <- paste0("<td",
                        if (clase_celda != "") paste0(" class='", clase_celda, "'") else "",
                        ">", esc(clase), "</td>")
+    celdas_num <- if (solo_cant) {
+      paste0("<td class='num'>", ifelse(is.na(cantidad), "", cantidad), "</td>")
+    } else {
+      paste0("<td class='num'>", ifelse(is.na(tarifa), "", fmt_num(tarifa)), "</td>",
+             "<td class='num'>", ifelse(is.na(cantidad), "", cantidad), "</td>",
+             "<td class='num'>", fmt_num(valor), "</td>")
+    }
     paste0("<tr", if (cl != "") paste0(" class='", cl, "'") else "",">",
-           td_clase, celdas_extra,
-           "<td class='num'>", ifelse(is.na(tarifa), "", fmt_num(tarifa)), "</td>",
-           "<td class='num'>", ifelse(is.na(cantidad), "", cantidad), "</td>",
-           "<td class='num'>", fmt_num(valor), "</td></tr>")
+           td_clase, celdas_extra, celdas_num, "</tr>")
   }
 
-  cabecera <- if (extra) {
+  cabecera <- if (solo_cant) {
+    paste0("<table><thead><tr><th>CLASE / CÓDIGO</th><th>CANTIDAD</th></tr></thead><tbody>")
+  } else if (extra) {
     paste0("<table><thead><tr><th>CLASE / CÓDIGO</th><th>ADICIONAL</th><th>CTO_086</th>",
            "<th>TARIFA</th><th>CANTIDAD</th><th>VALOR TOTAL</th></tr></thead><tbody>")
   } else {
@@ -561,35 +574,54 @@ construir_html_tabla_est <- function(ver) {
           clase_celda = "code"))
       }
     }
-    filas <- c(filas,
-      fila_html("SUBTOTAL ESTUDIOS", NA, subtotal_estudios_cant, subtotal_estudios, "subtotal-estudios"),
-      fila_html("HORA JUNTA MEDICA", tarifa_junta, cant_junta, valor_junta),
-      fila_html("VALOR FIJO POR SERVICIO DE LA NOCHE", tarifa_fijo, cant_fijo, valor_noche),
-      fila_html("SUBTOTAL ADICIONALES", NA, NA, subtotal_adicionales, "subtotal-adicionales"),
-      fila_html("TOTAL", NA, NA, total_estudios, "total")
-    )
+    if (solo_cant) {
+      # Versión 4.0: sin SUBTOTAL ADICIONALES ni TOTAL
+      filas <- c(filas,
+        fila_html("SUBTOTAL ESTUDIOS", NA, subtotal_estudios_cant, NA, "subtotal-estudios"),
+        fila_html("HORA JUNTA MEDICA", NA, cant_junta, NA),
+        fila_html("VALOR FIJO POR SERVICIO DE LA NOCHE", NA, cant_fijo, NA)
+      )
+    } else {
+      filas <- c(filas,
+        fila_html("SUBTOTAL ESTUDIOS", NA, subtotal_estudios_cant, subtotal_estudios, "subtotal-estudios"),
+        fila_html("HORA JUNTA MEDICA", tarifa_junta, cant_junta, valor_junta),
+        fila_html("VALOR FIJO POR SERVICIO DE LA NOCHE", tarifa_fijo, cant_fijo, valor_noche),
+        fila_html("SUBTOTAL ADICIONALES", NA, NA, subtotal_adicionales, "subtotal-adicionales"),
+        fila_html("TOTAL", NA, NA, total_estudios, "total")
+      )
+    }
     c(cabecera, filas, "</tbody></table>")
   }
 }
 
-# Construye la TABLA PROCEDIMIENTOS. La versión 3.0 agrega la columna CTO_086.
+# Construye la TABLA PROCEDIMIENTOS. La versión 3.0 agrega la columna CTO_086;
+# la versión 4.0 deja solo CODIGO / DESCRIPCION / CANTIDAD (conserva la fila TOTAL).
 construir_html_tabla_proc <- function(ver) {
-  extra <- identical(as.character(ver), "3.0")
+  extra     <- identical(as.character(ver), "3.0")
+  solo_cant <- identical(as.character(ver), "4.0")
   filas <- vapply(seq_len(nrow(tabla_proc)), function(i) {
     r <- tabla_proc[i, ]
     es_total <- r$CODIGO == "TOTAL"
-    tds <- paste0("<td>", esc(r$CODIGO), "</td>",
-                  "<td>", esc(r$DESCRIPCION), "</td>",
-                  "<td class='num'>", ifelse(is.na(r$TARIFA), "", fmt_num(r$TARIFA)), "</td>",
-                  "<td class='num'>", ifelse(is.na(r$CANTIDAD), "", r$CANTIDAD), "</td>",
-                  "<td class='num'>", fmt_num(r$VALOR_TOTAL), "</td>",
-                  "<td>", esc(r$ADICIONAL), "</td>",
-                  if (extra) paste0("<td>",
-                                    ifelse(is.na(r$CTO_086), "", esc(as.character(r$CTO_086))),
-                                    "</td>") else "")
+    tds <- if (solo_cant) {
+      paste0("<td>", esc(r$CODIGO), "</td>",
+             "<td>", esc(r$DESCRIPCION), "</td>",
+             "<td class='num'>", ifelse(is.na(r$CANTIDAD), "", r$CANTIDAD), "</td>")
+    } else {
+      paste0("<td>", esc(r$CODIGO), "</td>",
+             "<td>", esc(r$DESCRIPCION), "</td>",
+             "<td class='num'>", ifelse(is.na(r$TARIFA), "", fmt_num(r$TARIFA)), "</td>",
+             "<td class='num'>", ifelse(is.na(r$CANTIDAD), "", r$CANTIDAD), "</td>",
+             "<td class='num'>", fmt_num(r$VALOR_TOTAL), "</td>",
+             "<td>", esc(r$ADICIONAL), "</td>",
+             if (extra) paste0("<td>",
+                               ifelse(is.na(r$CTO_086), "", esc(as.character(r$CTO_086))),
+                               "</td>") else "")
+    }
     paste0("<tr", ifelse(es_total, " class='total'", ""), ">", tds, "</tr>")
   }, character(1))
-  cab <- if (extra) {
+  cab <- if (solo_cant) {
+    "<table><thead><tr><th>CODIGO</th><th>DESCRIPCION</th><th>CANTIDAD</th></tr></thead><tbody>"
+  } else if (extra) {
     paste0("<table><thead><tr><th>CODIGO</th><th>DESCRIPCION</th><th>TARIFA</th>",
            "<th>CANTIDAD</th><th>VALOR TOTAL</th><th>ADICIONAL</th><th>CTO_086</th></tr></thead><tbody>")
   } else {
@@ -598,7 +630,20 @@ construir_html_tabla_proc <- function(ver) {
   c(cab, filas, "</tbody></table>")
 }
 
-resumen <- paste0(
+# Resumen Ejecutivo. En la versión 4.0 (solo cantidades) no se mencionan precios.
+construir_resumen <- function(ver) {
+  sin_precios <- identical(as.character(ver), "4.0")
+  frase_clase <- if (sin_precios) {
+    "quedaron <strong>clasificadas</strong> en el catálogo; "
+  } else {
+    "quedaron con <strong>CLASE y TARIFA</strong> en el catálogo; "
+  }
+  frase_final <- if (sin_precios) {
+    "<em>TABLA PROCEDIMIENTOS</em> con sus recuentos (CANTIDAD)."
+  } else {
+    "<em>TABLA PROCEDIMIENTOS</em> con sus recuentos (CANTIDAD) y valores totales (VALOR TOTAL)."
+  }
+  paste0(
   "<p>El presente informe resume la ejecución del mes <strong>", mes_label, " (m.", mm_yy, ")</strong> ",
   "basado en el informe generado por el sistema Phillips - SAP del INC, enviado por Angela Lopez ",
   "(alopez@cancer.gov.co) - Secretaria - Auxiliar Administrativo Imágenes Diagnósticas. Se procesaron ",
@@ -608,16 +653,25 @@ resumen <- paste0(
   "A las ", fmt_num(n_asign), " celdas sin código se les asignó un código (mapeo del script 5 ",
   "y respaldo por similitud entre <em>PRESTACION</em> y <em>DESCRIPCION</em> de CUPS.2025). ",
   "Del cruce por código, <strong>", fmt_num(Y), " filas</strong> (de ", fmt_num(X),
-  ") quedaron con <strong>CLASE y TARIFA</strong> en el catálogo; ",
+  ") ", frase_clase,
   # Solo se mencionan las exclusiones si realmente ocurrieron en el mes
   if (n_excluidos > 0) paste0(fmt_num(n_excluidos), " filas quedaron <strong>excluidas por decisión</strong> (",
                               esc(paste(excl_cods, collapse = ", ")), ") y se descartan del informe. ") else "",
   "El cruce quedó completo (0 filas vacías inesperadas, Z = ", Z,
   "%). A continuación se presentan la <em>TABLA ESTUDIOS</em> y la ",
-  "<em>TABLA PROCEDIMIENTOS</em> con sus recuentos (CANTIDAD) y valores totales (VALOR TOTAL)."
-)
+  frase_final
+  )
+}
 
-salvedades <- paste0(
+# Salvedades. En la versión 4.0 (solo cantidades) no se mencionan precios.
+construir_salvedades <- function(ver) {
+  sin_precios <- identical(as.character(ver), "4.0")
+  frase_verif <- if (sin_precios) {
+    "<strong>todas quedaron clasificadas</strong> en el catálogo"
+  } else {
+    "<strong>todas quedaron con CLASE y TARIFA</strong> en el catálogo"
+  }
+  paste0(
   "<p><strong>Salvedades:</strong></p><ul>",
   "<li>Se descartaron las filas con <em>ESTADO</em> distinto de <strong>APROBADO</strong> (",
   fmt_num(n_vac), ").</li>",
@@ -625,7 +679,7 @@ salvedades <- paste0(
   fmt_num(n_phil), ").</li>",
   "<li>Se verificó que las <strong>", fmt_num(X), "</strong> filas resultantes tienen ",
   "<strong>ESTADO = APROBADO</strong> (verificadas: ", fmt_num(estado_aprobado), ") y que ",
-  "<strong>todas quedaron con CLASE y TARIFA</strong> en el catálogo",
+  frase_verif,
   # Solo se mencionan las exclusiones si realmente ocurrieron en el mes
   if (n_excluidos > 0) paste0(" o son <strong>excluidas por decisión</strong> (",
                               fmt_num(n_excluidos), " filas: ",
@@ -633,13 +687,22 @@ salvedades <- paste0(
                               "), que se descartan del informe") else "",
   ".</li>",
   "</ul>"
-)
+  )
+}
 
-# Genera las DOS versiones del informe (V.1.0 resumida y V.2.0 detallada)
+# Genera las versiones solicitadas (V.1.0, V.2.0, V.3.0 y/o V.4.0)
 for (v in version) {
   ruta_html <- file.path(getwd(), paste0("informe_", mm_yy, "_V.", v, ".html"))
   html_tabla_est  <- construir_html_tabla_est(v)
   html_tabla_proc <- construir_html_tabla_proc(v)
+  resumen_v       <- construir_resumen(v)
+  salvedades_v    <- construir_salvedades(v)
+  # La versión 4.0 (solo cantidades) no muestra el bloque de valor ejecutado.
+  bloque_valor <- if (identical(as.character(v), "4.0")) NULL else c(
+    "<h2>Valor Ejecutado - Valor por facturar</h2>",
+    paste0("<table><tr class='total'><td>VALOR EJECUTADO MES ", mes_upper, "</td><td class='num'>",
+           fmt_num(total_general), "</td></tr></table>")
+  )
 
   html <- c(
     "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>",
@@ -663,14 +726,12 @@ for (v in version) {
     "</style></head><body>",
     paste0("<h1>Informe Resumen de Ejecución — Mes ", mes_titulo, " ", anno, " (m.", mm_yy, ")</h1>"),
     "<div class='meta'>Fecha de elaboración: ", fecha_elab, "</div>",
-    "<h2>Resumen Ejecutivo</h2>", resumen,
+    "<h2>Resumen Ejecutivo</h2>", resumen_v,
     html_conteo,
     "<h2>TABLA ESTUDIOS</h2>", html_tabla_est,
     "<h2>TABLA PROCEDIMIENTOS</h2>", html_tabla_proc,
-    "<h2>Valor Ejecutado - Valor por facturar</h2>",
-    paste0("<table><tr class='total'><td>VALOR EJECUTADO MES ", mes_upper, "</td><td class='num'>",
-           fmt_num(total_general), "</td></tr></table>"),
-    "<h2>Salvedades</h2>", salvedades,
+    bloque_valor,
+    "<h2>Salvedades</h2>", salvedades_v,
     "</body></html>"
   )
 

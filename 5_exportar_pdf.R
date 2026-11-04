@@ -56,9 +56,9 @@ exportar_pdf <- function(mes_arg, version = c("1.0", "2.0")) {
     stop("Falta el mes. Uso: exportar_pdf(\"MM.YY\") o Rscript 5_exportar_pdf.R MM.YY [version]")
   }
   version <- unique(version)
-  if (!all(version %in% c("1.0", "2.0", "3.0"))) {
+  if (!all(version %in% c("1.0", "2.0", "3.0", "4.0"))) {
     stop("Versión(es) inválida(s): ", paste(version, collapse = ", "),
-         ". Use '1.0', '2.0' y/o '3.0'.")
+         ". Use '1.0', '2.0', '3.0' y/o '4.0'.")
   }
 
   # Normalizar MM.YY (acepta 07.26 o 07.2026)
