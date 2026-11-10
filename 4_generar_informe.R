@@ -8,11 +8,12 @@
 # el usuario (datos/Tarifario_CTO_086_2026.xlsx, generado por el proyecto
 # 'tarifario_CTO_086_V_2'); respaldo en catalogo_cto086_2026.rds.
 #
-#   Rscript 4_generar_informe.R MM.YY [version]
+#   Rscript 4_generar_informe.R MM.YY [version] [--junta=N]
 #     MM.YY   : mes.año (acepta "07.26" o "07.2026")
 #     version : "1.0" (TABLA ESTUDIOS plana), "2.0" (expandida, default),
 #               "3.0" (expandida + columnas ADICIONAL y CTO_086; informe borrador)
 #               o "4.0" (SOLO CANTIDADES, sin columnas de dinero)
+#     --junta=N : cantidad de HORA JUNTA MEDICA (si se omite, 100 por Rscript)
 #   Salida   : informe_MM.YY_V.{version}.html
 #
 # Flujo:
@@ -749,12 +750,18 @@ for (v in version) {
 # ==============================================================================
 if (sys.nframe() == 0) {
   args <- commandArgs(trailingOnly = TRUE)
+  # --junta=N : fija la cantidad de HORA JUNTA MEDICA (por defecto 100)
+  arg_junta <- grep("^--junta=", args, value = TRUE)
+  cant_junta_cli <- if (length(arg_junta) >= 1) {
+    as.integer(sub("^--junta=", "", arg_junta[1]))
+  } else NULL
+  args <- args[!startsWith(args, "--")]
   if (length(args) >= 1) {
     # Sin argumento de versión: se generan AMBAS versiones (V.1.0 y V.2.0)
     version <- if (length(args) >= 2) args[2] else c("1.0", "2.0")
-    generar_informe_mes(args[1], version)
+    generar_informe_mes(args[1], version, cant_junta_param = cant_junta_cli)
   } else {
-    stop("Uso: Rscript 4_generar_informe.R MM.YY [version]")
+    stop("Uso: Rscript 4_generar_informe.R MM.YY [version] [--junta=N]")
   }
 }
 

@@ -31,7 +31,7 @@ meses       <- args[!startsWith(args, "--")]
 if (length(meses) == 0) meses <- "09.26"
 
 # Cantidad de HORA JUNTA MEDICA para esta versión (requisito: 103 en 09.26).
-junta_v4 <- c("09.26" = 103L)
+junta_v4 <- c("09.26" = 103L, "10.26" = 105L)
 
 # Tarifario: el mismo del borrador (solo define CLASE y qué códigos son
 # PROCEDIMIENTO; no afecta las cantidades).

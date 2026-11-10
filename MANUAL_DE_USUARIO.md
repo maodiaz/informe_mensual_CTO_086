@@ -486,8 +486,11 @@ datos/m.07.26_normalizacion_detalle.csv  ← detalle de códigos asignados (Paso
 # Paso 2 — Normalizar el mes (OBLIGATORIO)
 Rscript 2_limpiar_mes.R 07.26
 
-# Paso 4 — Generar el informe (HTML)
+# Paso 4 — Generar el informe (HTML)  [V.1.0 y V.2.0]
 Rscript 4_generar_informe.R 07.26
+
+# Si la HORA JUNTA MEDICA del mes NO es 100, indíquela (si no, se usa 100):
+Rscript 4_generar_informe.R 07.26 --junta=105
 
 # Paso 5 — Exportar a PDF
 Rscript 5_exportar_pdf.R 07.26
@@ -499,6 +502,10 @@ Rscript 3_cargar_catalogo.R --actualizar
 # ── BORRADOR (precios de prueba, NO definitivos) ────────────
 # Genera la versión 3.0 sin tocar los informes oficiales
 Rscript 6_generar_borrador.R
+
+# ── SOLO CANTIDADES (versión 4.0) ───────────────────────────
+# Solo CLASE / CÓDIGO y CANTIDAD, sin columnas de dinero
+Rscript 7_generar_v4_cantidades.R 09.26
 ```
 
 **El orden normal de un mes es:** 1 → 2 → 4 → 5 (el Paso 3 es opcional).

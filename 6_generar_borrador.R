@@ -37,7 +37,8 @@ if (length(meses) == 0) meses <- c("06.26", "07.26")
 # correspondiente (verificada en los HTML oficiales) para que el borrador sea
 # comparable. Ajuste aquí si cambia para algún mes.
 junta_por_mes <- c("06.26" = 105L, "07.26" = 116L,
-                   "08.26" = 100L, "09.26" = 100L)
+                   "08.26" = 100L, "09.26" = 100L,
+                   "10.26" = 105L)
 
 # VALOR FIJO POR SERVICIO DE LA NOCHE: tarifa PROVISIONAL del borrador.
 # La del archivo oficial (datos/tarifas_especiales_2026.xlsx) es 62.618.981.
