@@ -24,12 +24,13 @@
 #            (CUPS.2025.xlsx) en 'datos/'; el proyecto es autocontenido y NO
 #            depende de los demás para generar informes. Solo se ejecuta cuando
 #            cambian los precios: Rscript 3_cargar_catalogo.R --actualizar
-#   PASO 4 — INFORME -> 4_generar_informe.R
+#   PASO 4 — INFORMES (4 VERSIONES) -> 4_generar_informe.R
 #            Cruza el mes limpio contra el catálogo, valida que no queden
-#            filas sin CLASE/TARIFA y genera informe_MM.YY_V.1.0.html y
-#            informe_MM.YY_V.2.0.html.
+#            filas sin CLASE/TARIFA y genera las CUATRO versiones:
+#              V.1.0 (resumida) y V.2.0 (detallada)  -> tarifario OFICIAL
+#              V.3.0 (ADICIONAL/CTO_086) y V.4.0 (solo cantidades) -> tarifario V3
 #   PASO 5 — PDF -> 5_exportar_pdf.R
-#            Exporta las versiones HTML a PDF con Chrome headless
+#            Exporta las 4 versiones HTML a PDF con Chrome headless
 #            (conserva tablas, colores y estilos).
 #
 # FLUJO NORMAL DE UN MES: 1 -> 2 -> 4 -> 5 (el Paso 3 es OPCIONAL).
@@ -80,8 +81,8 @@ library(
 #   PASO 1 — CARGA DEL MES   (1_cargar_mes.R):     elige el .xlsx crudo del mes
 #   PASO 2 — NORMALIZACIÓN   (2_limpiar_mes.R):    obligatorio, STTEXT=Aprobado
 #   PASO 3 — TARIFARIO       (3_cargar_catalogo.R): OPCIONAL, solo si cambió el precio
-#   PASO 4 — INFORME         (4_generar_informe.R): V.1.0 y V.2.0 en HTML
-#   PASO 5 — PDF             (5_exportar_pdf.R):    exporta HTML -> PDF
+#   PASO 4 — INFORMES        (4_generar_informe.R): V.1.0 a V.4.0 en HTML
+#   PASO 5 — PDF             (5_exportar_pdf.R):    exporta los HTML -> PDF
 #
 # Los scripts se cargan con source() (solo definen sus funciones; gracias a la
 # guarda 'sys.nframe() == 0' no ejecutan nada al ser source()).
@@ -218,16 +219,18 @@ main_interactivo <- function() {
     actualizar_insumos(actualizar = FALSE)
   }
 
-  # 5) PASO 4 — GENERAR EL INFORME
+  # 5) PASO 4 — GENERAR LOS INFORMES (4 VERSIONES)
   ejecutar_paso(
     4,
-    "GENERAR EL INFORME",
+    "GENERAR LOS INFORMES",
     paste0("Cruza el mes normalizado (datos/m.", gsub("[.]", ".", mm_yy),
            "_limpio.rds) contra el tarifario,\n   valida que no queden filas sin ",
-           "CLASE/TARIFA y genera:\n     - informe_", gsub("[.]", ".", mm_yy),
-           "_V.1.0.html (resumida)\n     - informe_", gsub("[.]", ".", mm_yy),
-           "_V.2.0.html (detallada)"),
-    function() generar_informe_mes(mm_yy)
+           "CLASE/TARIFA y genera las CUATRO versiones:\n",
+           "     - informe_", gsub("[.]", ".", mm_yy), "_V.1.0.html (resumida)          [tarifario oficial]\n",
+           "     - informe_", gsub("[.]", ".", mm_yy), "_V.2.0.html (detallada)         [tarifario oficial]\n",
+           "     - informe_", gsub("[.]", ".", mm_yy), "_V.3.0.html (ADICIONAL/CTO_086) [tarifario V3]\n",
+           "     - informe_", gsub("[.]", ".", mm_yy), "_V.4.0.html (solo cantidades)   [tarifario V3]"),
+    function() generar_todas_las_versiones(mm_yy)
   )
 
   # 6) PASO 5 — EXPORTAR A PDF
@@ -236,7 +239,7 @@ main_interactivo <- function() {
     "EXPORTAR A PDF",
     paste0("Convierte los HTML del mes (informe_", gsub("[.]", ".", mm_yy),
            "_V.*.html) a PDF con Chrome\n   headless, conservando tablas, colores y estilos."),
-    function() exportar_pdf(mm_yy)
+    function() exportar_pdf(mm_yy, TODAS_LAS_VERSIONES)
   )
 
   # 7) RESUMEN FINAL
@@ -246,10 +249,8 @@ main_interactivo <- function() {
   archivos <- c(
     paste0("datos/m.", mm_yy, ".rds"),
     paste0("datos/m.", mm_yy, "_limpio.rds"),
-    paste0("informe_", mm_yy, "_V.1.0.html"),
-    paste0("informe_", mm_yy, "_V.2.0.html"),
-    paste0("informe_", mm_yy, "_V.1.0.pdf"),
-    paste0("informe_", mm_yy, "_V.2.0.pdf")
+    paste0("informe_", mm_yy, "_V.", TODAS_LAS_VERSIONES, ".html"),
+    paste0("informe_", mm_yy, "_V.", TODAS_LAS_VERSIONES, ".pdf")
   )
   for (a in archivos) {
     cat(if (file.exists(a)) "  [x]" else "  [ ]", " ", a, "\n", sep = "")

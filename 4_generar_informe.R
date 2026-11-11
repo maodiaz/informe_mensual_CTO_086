@@ -10,10 +10,12 @@
 #
 #   Rscript 4_generar_informe.R MM.YY [version] [--junta=N]
 #     MM.YY   : mes.año (acepta "07.26" o "07.2026")
-#     version : "1.0" (TABLA ESTUDIOS plana), "2.0" (expandida, default),
-#               "3.0" (expandida + columnas ADICIONAL y CTO_086; informe borrador)
+#     version : "1.0" (TABLA ESTUDIOS plana), "2.0" (expandida),
+#               "3.0" (expandida + columnas ADICIONAL y CTO_086)
 #               o "4.0" (SOLO CANTIDADES, sin columnas de dinero)
-#     --junta=N : cantidad de HORA JUNTA MEDICA (si se omite, 100 por Rscript)
+#               Por defecto el CLI genera LAS CUATRO versiones.
+#     --junta=N : cantidad de HORA JUNTA MEDICA (si se omite, se toma de
+#                 JUNTA_POR_MES segun el mes)
 #   Salida   : informe_MM.YY_V.{version}.html
 #
 # Flujo:
@@ -48,6 +50,37 @@ invisible(lapply(c("readr", "readxl", "dplyr", "stringdist", "stringi"), library
 source("2_limpiar_mes.R")   # define limpiar_mes() (la normalización la hace el PASO 2)
 
 # ================================================================================
+# 0. CONFIGURACIÓN DE LAS VERSIONES DEL INFORME
+# ------------------------------------------------------------------------------
+# Todo lo que distingue a las 4 versiones está centralizado aquí.
+#
+#   V.1.0  Oficial resumida (una fila por CLASE)         -> tarifario OFICIAL
+#   V.2.0  Oficial detallada (una fila por código)       -> tarifario OFICIAL
+#   V.3.0  Detallada + columnas ADICIONAL y CTO_086      -> tarifario V3
+#   V.4.0  Solo cantidades (sin columnas de dinero)      -> tarifario V3
+#
+# La cantidad de HORA JUNTA MEDICA se toma de JUNTA_POR_MES (por mes). La V.4.0
+# admite un valor propio en JUNTA_V4_POR_MES (si el mes no está, usa el general).
+# ALTA DE UN MES NUEVO: agregar su cantidad a JUNTA_POR_MES (y a JUNTA_V4_POR_MES
+# solo si la V.4.0 necesita una cantidad distinta).
+# ================================================================================
+
+TARIFARIO_OFICIAL <- "Tarifario_CTO_086_2026.xlsx"    # V.1.0 y V.2.0
+TARIFARIO_V3      <- "Tarifario_CTO_086_2026_V3.xlsx" # V.3.0 y V.4.0
+TARIFA_FIJO_V3    <- 56560000   # VALOR FIJO POR SERVICIO DE LA NOCHE (V.3.0/V.4.0)
+
+# Cantidad de HORA JUNTA MEDICA por mes
+JUNTA_POR_MES <- c("06.26" = 105L, "07.26" = 116L, "08.26" = 100L,
+                   "09.26" = 100L, "10.26" = 105L)
+
+# Excepción de la V.4.0 (si el mes no está aquí, se usa JUNTA_POR_MES)
+JUNTA_V4_POR_MES <- c("09.26" = 103L, "10.26" = 105L)
+
+VERSIONES_OFICIALES <- c("1.0", "2.0")
+VERSIONES_V3        <- c("3.0", "4.0")
+TODAS_LAS_VERSIONES <- c(VERSIONES_OFICIALES, VERSIONES_V3)
+
+# ================================================================================
 # 1. Función principal: generar_informe_mes(mes_arg, version = "2.0")
 # ------------------------------------------------------------------------------
 # mes_arg        : "MM.YY" (acepta 07.26 o 07.2026)
@@ -55,8 +88,7 @@ source("2_limpiar_mes.R")   # define limpiar_mes() (la normalización la hace el
 #                  "3.0" (expandida + ADICIONAL y CTO_086; informe borrador) o
 #                  "4.0" (SOLO CANTIDADES: sin TARIFA ni VALOR TOTAL)
 # ruta_tarifario : NULL = tarifario OFICIAL de 'datos/' (por defecto);
-#                  ruta a un xlsx alternativo (p. ej. un tarifario BORRADOR con
-#                  precios no definitivos).
+#                  ruta a un xlsx alternativo (p. ej. el tarifario V3).
 # cant_junta_param : NULL = 100 por Rscript / pregunta en RStudio (por defecto);
 #                  número = cantidad fija de HORA JUNTA MEDICA (no pregunta).
 # tarifa_fijo_param : NULL = la de tarifas_especiales_2026.xlsx (por defecto);
@@ -128,7 +160,7 @@ generar_informe_mes <- function(mes_arg, version = c("1.0", "2.0"),
   # Catálogo del tarifario: por defecto el OFICIAL de 'datos/'
   # (Tarifario_CTO_086_2026.xlsx; se acepta también el nombre anterior
   # tarifario_cto086_2026.xlsx). Si se pasa 'ruta_tarifario' se usa ese archivo
-  # (p. ej. un tarifario BORRADOR con precios experimentales).
+  # (p. ej. el tarifario V3).
   # Respaldo: catalogo_cto086_2026.rds.
   ruta_cat_rds <- file.path(getwd(), "datos", "catalogo_cto086_2026.rds")
   if (!is.null(ruta_tarifario)) {
@@ -743,41 +775,108 @@ for (v in version) {
 }   # fin de generar_informe_mes()
 
 # ==============================================================================
-# Modo CLI (Rscript 4_generar_informe.R MM.YY [version])
+# Generación de TODAS las versiones del informe (lo que ejecuta el pipeline)
 # ------------------------------------------------------------------------------
-# Se ejecuta SOLO si el script se corre directamente; al ser source() desde
-# otro script (p. ej. main.R PASO 4) solo se define la función generar_informe_mes().
+# 1) V.1.0 y V.2.0 con el tarifario OFICIAL
+# 2) V.3.0 con el tarifario V3 y su tarifa nocturna
+# 3) V.4.0 (solo cantidades) con el tarifario V3
+# Lo invocan main.R (PASO 4) y el CLI de este script.
+# ==============================================================================
+clave_mes_yy <- function(mes_arg) {
+  mm   <- sub("[.].*$", "", as.character(mes_arg))
+  anio <- sub("^[0-9]{2}[.]", "", as.character(mes_arg))
+  yy   <- if (nchar(anio) == 4) substr(anio, 3, 4) else anio
+  paste0(mm, ".", yy)
+}
+
+generar_todas_las_versiones <- function(mes_arg, cant_junta = NULL) {
+  clave <- clave_mes_yy(mes_arg)
+
+  # --- Cantidad de HORA JUNTA MEDICA ------------------------------------------
+  junta <- cant_junta
+  if (is.null(junta) && clave %in% names(JUNTA_POR_MES)) {
+    junta <- JUNTA_POR_MES[[clave]]
+    cat("[i] HORA JUNTA MEDICA para", clave, ":", junta, "(tabla JUNTA_POR_MES)\n")
+  }
+  if (is.null(junta) && interactive()) {
+    entrada <- trimws(readline(prompt = paste0(
+      "CANTIDAD HORA JUNTA MEDICA para ", clave, " (Enter = 100): ")))
+    if (grepl("^[0-9]+$", entrada)) junta <- as.integer(entrada)
+  }
+  if (is.null(junta)) {
+    warning("No hay cantidad de HORA JUNTA MEDICA definida para ", clave,
+            "; se usará 100. Agréguela a JUNTA_POR_MES en 4_generar_informe.R.")
+    junta <- 100L
+  }
+  junta_v4 <- if (clave %in% names(JUNTA_V4_POR_MES)) JUNTA_V4_POR_MES[[clave]] else junta
+
+  # --- Tarifario V3 (obligatorio para V.3.0 y V.4.0) ---------------------------
+  ruta_v3 <- file.path(getwd(), "datos", TARIFARIO_V3)
+  if (!file.exists(ruta_v3)) {
+    stop("No se encontró el tarifario V3: ", ruta_v3,
+         "\n  Es obligatorio para las versiones V.3.0 y V.4.0.",
+         "\n  Créelo copiando el oficial y ajustando los precios:\n    cp datos/",
+         TARIFARIO_OFICIAL, " datos/", TARIFARIO_V3)
+  }
+
+  cat("\n======================================================================\n")
+  cat(" INFORMES DEL MES ", clave, " — 4 VERSIONES\n", sep = "")
+  cat("   V.1.0 / V.2.0 : ", TARIFARIO_OFICIAL, " | junta: ", junta, "\n", sep = "")
+  cat("   V.3.0 / V.4.0 : ", TARIFARIO_V3, " | junta: ", junta,
+      " (V.4.0: ", junta_v4, ")\n", sep = "")
+  cat("======================================================================\n")
+
+  # V.1.0 + V.2.0 (tarifario oficial)
+  generar_informe_mes(mes_arg, VERSIONES_OFICIALES, cant_junta_param = junta)
+
+  # V.3.0 (tarifario V3 + tarifa nocturna propia)
+  generar_informe_mes(mes_arg, "3.0", ruta_tarifario = ruta_v3,
+                      cant_junta_param = junta, tarifa_fijo_param = TARIFA_FIJO_V3)
+
+  # V.4.0 (tarifario V3, solo cantidades)
+  generar_informe_mes(mes_arg, "4.0", ruta_tarifario = ruta_v3,
+                      cant_junta_param = junta_v4, tarifa_fijo_param = TARIFA_FIJO_V3)
+
+  invisible(TODAS_LAS_VERSIONES)
+}
+
+# ==============================================================================
+# Modo CLI (Rscript 4_generar_informe.R MM.YY [--junta=N])
+# ------------------------------------------------------------------------------
+# Genera LAS CUATRO versiones. Se ejecuta SOLO si el script se corre directamente;
+# al ser source() desde otro script (p. ej. main.R PASO 4) solo se definen las
+# funciones.
 # ==============================================================================
 if (sys.nframe() == 0) {
   args <- commandArgs(trailingOnly = TRUE)
-  # --junta=N : fija la cantidad de HORA JUNTA MEDICA (por defecto 100)
+  # --junta=N : fija la cantidad de HORA JUNTA MEDICA (si no, tabla por mes)
   arg_junta <- grep("^--junta=", args, value = TRUE)
   cant_junta_cli <- if (length(arg_junta) >= 1) {
     as.integer(sub("^--junta=", "", arg_junta[1]))
   } else NULL
   args <- args[!startsWith(args, "--")]
   if (length(args) >= 1) {
-    # Sin argumento de versión: se generan AMBAS versiones (V.1.0 y V.2.0)
-    version <- if (length(args) >= 2) args[2] else c("1.0", "2.0")
-    generar_informe_mes(args[1], version, cant_junta_param = cant_junta_cli)
+    generar_todas_las_versiones(args[1], cant_junta = cant_junta_cli)
   } else {
-    stop("Uso: Rscript 4_generar_informe.R MM.YY [version] [--junta=N]")
+    stop("Uso: Rscript 4_generar_informe.R MM.YY [--junta=N]")
   }
 }
 
 # ==============================================================================
 # NOTAS DE USO — REGENERACIÓN Y EXPORTACIÓN
 # ------------------------------------------------------------------------------
-# 1) REGENERAR el informe de un mes (desde la carpeta del proyecto):
-#      Rscript 4_generar_informe.R 07.26        # -> genera V.1.0 y V.2.0
-#      Rscript 4_generar_informe.R 07.26 2.0    # -> solo informe_07.26_V.2.0.html
+# 1) REGENERAR los informes de un mes (desde la carpeta del proyecto):
+#      Rscript 4_generar_informe.R 07.26              # -> las 4 versiones (HTML)
+#      Rscript 4_generar_informe.R 07.26 --junta=105  # -> forzando la junta
 #    En RStudio (main.R PASO 4), con source():
 #      source("4_generar_informe.R")
-#      generar_informe_mes("07.26")             # -> genera V.1.0 y V.2.0
-#    Si cambia el catálogo del tarifario:
-#      Rscript 3_cargar_catalogo.R --actualizar
-#      Rscript 4_generar_informe.R 07.26        # -> regenera con el catálogo vigente
+#      generar_todas_las_versiones("07.26")           # -> las 4 versiones
+#      generar_informe_mes("07.26", "2.0")            # -> solo una versión
+#    Si cambia un tarifario:
+#      Rscript 3_cargar_catalogo.R --actualizar   # tarifario OFICIAL
+#      (el V3 se edita directamente en datos/Tarifario_CTO_086_2026_V3.xlsx)
+#      Rscript 4_generar_informe.R 07.26
 #
 # 2) EXPORTAR a PDF (Chrome headless — conserva tablas, colores y estilos):
-#      Rscript 5_exportar_pdf.R 07.26           # -> V.1.0 y V.2.0
+#      Rscript 5_exportar_pdf.R 07.26            # -> V.1.0, V.2.0, V.3.0 y V.4.0
 # ==============================================================================

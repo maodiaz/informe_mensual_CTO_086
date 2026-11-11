@@ -267,3 +267,4 @@ cargar_mes <- function(mm_yy = NULL) {
 if (sys.nframe() == 0) {
   cargar_mes()
 }
+

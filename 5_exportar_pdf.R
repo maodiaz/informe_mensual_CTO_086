@@ -48,7 +48,7 @@ encontrar_chrome <- function() {
 # ------------------------------------------------------------------------------
 # Convierte informe_MM.YY_V.{version}.html a PDF con Chrome headless.
 #   mes_arg : "MM.YY" (acepta 07.26 o 07.2026)
-#   version : "1.0", "2.0", "3.0" o los que se indiquen (default: 1.0 y 2.0)
+#   version : "1.0", "2.0", "3.0", "4.0" o los que se indiquen (default: los cuatro)
 # Al ser source() desde main.R solo se define la función; por Rscript se ejecuta.
 exportar_pdf <- function(mes_arg, version = c("1.0", "2.0")) {
 
@@ -126,7 +126,7 @@ exportar_pdf <- function(mes_arg, version = c("1.0", "2.0")) {
 if (sys.nframe() == 0) {
   args <- commandArgs(trailingOnly = TRUE)
   if (length(args) >= 1) {
-    version <- if (length(args) >= 2) args[2] else c("1.0", "2.0")
+    version <- if (length(args) >= 2) args[2] else c("1.0", "2.0", "3.0", "4.0")
     exportar_pdf(args[1], version)
   } else {
     stop("Uso: Rscript 5_exportar_pdf.R MM.YY [version]")

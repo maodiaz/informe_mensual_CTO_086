@@ -61,7 +61,7 @@ Son los **insumos xlsx** que usted debe asegurar que estén en `datos/`:
 | `Tarifario_CTO_086_2026.xlsx` | **El tarifario con los precios** (lo genera el proyecto tarifario) | **Sí** | Paso 4 |
 | `CUPS.2025.xlsx` | Catálogo de referencia para completar códigos | **Sí** | Paso 2 |
 | `tarifas_especiales_2026.xlsx` | Tarifas especiales (solo junta médica y servicio nocturno) | No (se usan valores por defecto) | Paso 4 |
-| `Tarifario_CTO_086_2026_BORRADOR.xlsx` | Copia del tarifario para probar **precios NO definitivos** | No (solo para el informe borrador) | Sección 11 |
+| `Tarifario_CTO_086_2026_V3.xlsx` | Tarifario propio de las versiones **V.3.0 y V.4.0** | **Sí** | Paso 4 (sección 11) |
 
 **Además, tenga a la mano el Excel del mes** (el archivo de origen con los
 datos del mes). No necesita estar dentro de la carpeta `datos/`: el Paso 1 le
@@ -137,8 +137,8 @@ responde unas pocas preguntas y el programa hace el trabajo.
 | **1** | `1_cargar_mes.R` | Guarda el Excel del mes dentro del proyecto | El **Excel del mes** | `datos/m.MM.YY.rds` (el mes guardado) |
 | **2** | `2_limpiar_mes.R` | **Normaliza** el mes (obligatorio antes del informe) | El mes guardado en el Paso 1 | `datos/m.MM.YY_limpio.rds` + resumen de normalización (CSV) |
 | **3** *(opcional)* | `3_cargar_catalogo.R` | Verifica / actualiza el tarifario cuando cambian | Solo si cambiaron los precios (proyecto tarifario) | Tarifario actualizado en `datos/` |
-| **4** | `4_generar_informe.R` | Compara el mes normalizado con los precios y crea el informe | El mes normalizado (Paso 2) y el tarifario (en `datos/`) | `informe_MM.YY_V.1.0.html` y `informe_MM.YY_V.2.0.html` |
-| **5** | `5_exportar_pdf.R` | Convierte el informe a PDF | Los archivos HTML del Paso 4 | `informe_MM.YY_V.1.0.pdf` y `informe_MM.YY_V.2.0.pdf` |
+| **4** | `4_generar_informe.R` | Compara el mes normalizado con los precios y crea **las 4 versiones** del informe | El mes normalizado (Paso 2) y los tarifarios (en `datos/`) | `informe_MM.YY_V.1.0.html`, `V.2.0`, `V.3.0` y `V.4.0` |
+| **5** | `5_exportar_pdf.R` | Convierte **las 4 versiones** a PDF | Los archivos HTML del Paso 4 | `informe_MM.YY_V.1.0.pdf`, `V.2.0`, `V.3.0` y `V.4.0` |
 
 > **MM.YY** es el mes y año en 2 dígitos. Por ejemplo, julio de 2026 se escribe **07.26**.
 > Los archivos se nombran con ese código (ej.: `informe_07.26_V.2.0.pdf`).
@@ -146,9 +146,9 @@ responde unas pocas preguntas y el programa hace el trabajo.
 > **Flujo normal de un mes: Pasos 1 → 2 → 4 → 5.** El Paso 3 es opcional (solo
 > cuando cambian los precios del catálogo).
 >
-> **¿Necesita un informe borrador con precios de prueba?** Hay un script aparte,
-> `6_generar_borrador.R`, que genera la **versión 3.0** sin tocar los informes
-> oficiales. Vea la **sección 11**.
+> **El Paso 4 genera las CUATRO versiones en una sola ejecución:** V.1.0 y V.2.0
+> (con el tarifario oficial) y V.3.0 y V.4.0 (con el tarifario V3). Vea la
+> **sección 11** para saber en qué se diferencia cada una.
 
 ---
 
@@ -447,7 +447,7 @@ datos/m.07.26_normalizacion_detalle.csv  ← detalle de códigos asignados (Paso
 | "No se encontró Google Chrome" | Chrome no está instalado | Instale **Google Chrome** y repita el Paso 5 |
 | El informe se ve con precios viejos | El catálogo cambió y no se actualizó | Repita **Paso 3 con `--actualizar`** y luego Pasos 4 y 5 |
 | Escribí mal el mes (ej. `7` en vez de `07`) | El formato debe ser de 2 dígitos | Use `07`, `08`, `09`... |
-| "No se encontró el tarifario del borrador" (sección 11) | Falta `datos/Tarifario_CTO_086_2026_BORRADOR.xlsx` | Cópielo del oficial: `cp datos/Tarifario_CTO_086_2026.xlsx datos/Tarifario_CTO_086_2026_BORRADOR.xlsx` |
+| "No se encontró el tarifario V3" | Falta `datos/Tarifario_CTO_086_2026_V3.xlsx` (obligatorio para V.3.0 y V.4.0) | Créelo copiando el oficial: `cp datos/Tarifario_CTO_086_2026.xlsx datos/Tarifario_CTO_086_2026_V3.xlsx` |
 
 ---
 
@@ -486,26 +486,19 @@ datos/m.07.26_normalizacion_detalle.csv  ← detalle de códigos asignados (Paso
 # Paso 2 — Normalizar el mes (OBLIGATORIO)
 Rscript 2_limpiar_mes.R 07.26
 
-# Paso 4 — Generar el informe (HTML)  [V.1.0 y V.2.0]
+# Paso 4 — Generar LAS CUATRO versiones del informe (HTML)
 Rscript 4_generar_informe.R 07.26
 
-# Si la HORA JUNTA MEDICA del mes NO es 100, indíquela (si no, se usa 100):
+# Si la HORA JUNTA MEDICA del mes no está en la tabla del script, indíquela:
 Rscript 4_generar_informe.R 07.26 --junta=105
 
-# Paso 5 — Exportar a PDF
+# Paso 5 — Exportar a PDF (las cuatro versiones)
 Rscript 5_exportar_pdf.R 07.26
 
 # ── OPCIONAL ────────────────────────────────────────────────
-# Paso 3 — Actualizar el catálogo (solo cuando cambian los precios)
+# Paso 3 — Actualizar el tarifario OFICIAL (solo cuando cambian los precios)
 Rscript 3_cargar_catalogo.R --actualizar
-
-# ── BORRADOR (precios de prueba, NO definitivos) ────────────
-# Genera la versión 3.0 sin tocar los informes oficiales
-Rscript 6_generar_borrador.R
-
-# ── SOLO CANTIDADES (versión 4.0) ───────────────────────────
-# Solo CLASE / CÓDIGO y CANTIDAD, sin columnas de dinero
-Rscript 7_generar_v4_cantidades.R 09.26
+# (el tarifario V3 se edita directamente en datos/Tarifario_CTO_086_2026_V3.xlsx)
 ```
 
 **El orden normal de un mes es:** 1 → 2 → 4 → 5 (el Paso 3 es opcional).
@@ -513,86 +506,60 @@ Cuando cambien los precios: **3 (con `--actualizar`) → 4 → 5**.
 
 ---
 
-## 11. Informe BORRADOR (versión 3.0) — precios NO definitivos
+## 11. Las cuatro versiones del informe
 
-**Para qué sirve:** generar una **nueva versión del informe** con **precios de prueba**
-que todavía **no son definitivos**, sin tocar los informes oficiales ni el tarifario
-oficial.
+**Desde el 2026-11-11**, el **Paso 4 genera las cuatro versiones en una sola
+ejecución**. No hay que correr nada aparte.
 
-### ¿Qué la diferencia de las otras versiones?
+### En qué se diferencia cada versión
 
-Es igual de detallada que la **V.2.0** (una línea por código) pero con **dos columnas
-más**:
+| Versión | Qué muestra | Tarifario |
+|---|---|---|
+| **V.1.0** | Tabla de estudios **resumida** (una fila por tipo de estudio), con tarifas y valores | Oficial |
+| **V.2.0** | Tabla de estudios **detallada** (una fila por código), con tarifas y valores | Oficial |
+| **V.3.0** | Detallada + dos columnas más: **ADICIONAL** (FACTURADO / SOLICITADO) y **CTO_086** (CONTRATADO / PENDIENTE / clase) | **V3** |
+| **V.4.0** | **Solo cantidades**: CLASE/CÓDIGO y CANTIDAD. Sin tarifas, sin valores y sin el bloque "Valor Ejecutado" | **V3** |
 
-| Columna | Qué muestra |
-|---|---|
-| **ADICIONAL** | Si el estudio es **FACTURADO** o **SOLICITADO** |
-| **CTO_086** | Si está **CONTRATADO**, **PENDIENTE**, o el nombre de la clase |
+### Los dos tarifarios
 
-### Lo importante: no daña nada
+| Archivo en `datos/` | Se usa en | Qué es |
+|---|---|---|
+| `Tarifario_CTO_086_2026.xlsx` | V.1.0 y V.2.0 | El tarifario **oficial** (lo actualiza el Paso 3) |
+| `Tarifario_CTO_086_2026_V3.xlsx` | V.3.0 y V.4.0 | El tarifario **V3**, con sus propios precios |
 
-| Esto SÍ se crea / cambia | Esto NO se toca |
-|---|---|
-| `informe_MM.YY_V.3.0.html` y `.pdf` (archivos **nuevos**) | `informe_MM.YY_V.1.0.*` y `informe_MM.YY_V.2.0.*` (los oficiales) |
-| `datos/Tarifario_CTO_086_2026_BORRADOR.xlsx` (su copia de trabajo) | `datos/Tarifario_CTO_086_2026.xlsx` (el tarifario oficial) |
+> Antes el tarifario V3 se llamaba `..._BORRADOR.xlsx`. Se renombró porque ya no es
+> un borrador temporal: es una versión que se entrega.
 
-### Cómo hacerlo, paso a paso
+### Cómo se generan
 
-**1. Crear su copia del tarifario** (solo la primera vez).
-En la pestaña **Terminal**, escriba y presione **Enter**:
-
-```
-cp datos/Tarifario_CTO_086_2026.xlsx datos/Tarifario_CTO_086_2026_BORRADOR.xlsx
-```
-
-**2. Cambiar los precios de prueba.**
-Abra `datos/Tarifario_CTO_086_2026_BORRADOR.xlsx` en Excel, vaya a la hoja
-**`TARIFARIO`** y modifique la columna **`TARIFAS_2026`**. Guarde y cierre.
-
-**3. Generar el borrador.** En la Terminal:
+Solo hay que ejecutar el flujo normal (**Pasos 1 → 2 → 4 → 5**), o usar `main.R`.
+El Paso 4 produce las cuatro versiones y el Paso 5 las cuatro en PDF:
 
 ```
-Rscript 6_generar_borrador.R
+informe_MM.YY_V.1.0.html / .pdf
+informe_MM.YY_V.2.0.html / .pdf
+informe_MM.YY_V.3.0.html / .pdf
+informe_MM.YY_V.4.0.html / .pdf
 ```
 
-Eso genera el borrador de **junio (06.26)** y **julio (07.26)**. Si quiere otros meses,
-o solo el HTML:
+### Si necesita cambiar los precios del tarifario V3
 
-```
-Rscript 6_generar_borrador.R 08.26 09.26        # solo esos meses
-Rscript 6_generar_borrador.R 06.26 --sin-pdf    # solo el HTML (sin PDF)
-```
+Abra `datos/Tarifario_CTO_086_2026_V3.xlsx` en Excel, vaya a la hoja **`TARIFARIO`**,
+modifique la columna **`TARIFAS_2026`**, guarde y vuelva a ejecutar los Pasos 4 y 5.
+El tarifario oficial **no se toca**.
 
-**¿Cómo saber que salió bien?**
-Al final aparece:
+### Cantidad de "HORA JUNTA MEDICA" por mes
 
-```
-LISTO. Archivos generados (borrador, no definitivos):
-   informe_06.26_V.3.0.html
-   informe_06.26_V.3.0.pdf
-   ...
- Los informes oficiales V.1.0 y V.2.0 NO se modificaron.
-```
+| Mes | V.1.0 / V.2.0 / V.3.0 | V.4.0 |
+|---|---|---|
+| 06.26 | 105 | 105 |
+| 07.26 | 116 | 116 |
+| 08.26 | 100 | 100 |
+| 09.26 | 100 | **103** |
+| 10.26 | 105 | 105 |
 
-### Nota importante sobre la cantidad de "HORA JUNTA MEDICA"
+Estas cantidades están en la tabla `JUNTA_POR_MES` al inicio de `4_generar_informe.R`.
 
-Cada informe oficial usó una cantidad distinta de horas de junta médica:
-
-| Mes | Horas usadas |
-|---|---|
-| 06.26 | 105 |
-| 07.26 | 116 |
-| 08.26 | 100 |
-| 09.26 | 100 |
-
-El script del borrador **ya las aplica automáticamente**, para que el borrador se
-pueda comparar con el informe oficial del mismo mes.
-
-> Si algún mes cambia, actualice el valor en la lista `junta_por_mes` al inicio de
-> `6_generar_borrador.R`.
-
-### ⚠️ Advertencia
-
-Los precios del borrador **no son definitivos**. Cuando los precios queden
-definitivos, el camino correcto es actualizar el tarifario **oficial** (proyecto
-`tarifario_CTO_086_V_2`) y regenerar los informes oficiales con los **Pasos 3 → 4 → 5**.
+> **Para un mes nuevo:** agregue su cantidad a `JUNTA_POR_MES` (y a
+> `JUNTA_V4_POR_MES` solo si la V.4.0 necesita una cantidad distinta). También puede
+> forzarla al ejecutar: `Rscript 4_generar_informe.R 11.26 --junta=105`
